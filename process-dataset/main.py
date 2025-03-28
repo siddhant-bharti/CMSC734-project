@@ -96,6 +96,32 @@ def prune_dataset():
     dataset.to_csv("dataset/dataset_denormalized_enriched_pruned.csv", index=False)
 
 
+def get_sample_dataset():
+    asylum_iso = "CHE"
+    dataset = get_dataset(
+        dataset_path="dataset/dataset_denormalized_enriched_pruned.csv"
+    )
+    dataset = dataset[dataset["AsylumISO"] == asylum_iso]
+    dataset[" Count"] = dataset[" Count"].str.replace(",", "").str.strip().astype(int)
+    new_df = pd.DataFrame(
+        {
+            "origin_lat": dataset["originLatitude"],
+            "origin_lon": dataset["originLongitude"],
+            "dest_lat": dataset["asylumLatitude"],
+            "dest_lon": dataset["asylumLongitude"],
+            "migrants": dataset[" Count"],
+        }
+    )
+    route_totals = (
+        new_df.groupby(["origin_lat", "origin_lon", "dest_lat", "dest_lon"])["migrants"]
+        .sum()
+        .reset_index()
+    )
+
+    route_totals.to_csv(f"dataset/filtered_{asylum_iso}.csv", index=False)
+
+
 if __name__ == "__main__":
     # process_dataset()
-    prune_dataset()
+    # prune_dataset()
+    get_sample_dataset()
