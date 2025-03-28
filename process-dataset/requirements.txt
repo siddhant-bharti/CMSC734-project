@@ -1,0 +1,5 @@
+numpy==2.2.4
+geopy==2.4.1
+pycountry==24.6.1
+pandas==2.2.3
+tenacity==9.0.0
