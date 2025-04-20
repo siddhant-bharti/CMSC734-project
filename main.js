@@ -1,6 +1,10 @@
 import {loadDataSet, createCountryISOMapping} from "./data-utils.js";
 
 
+var map = d3.select('#map');
+var mapWidth = +map.attr('width');
+var mapHeight = +map.attr('height');
+
 var myMap = L.map('map').setView([0, 0], 2);
 
 
@@ -15,9 +19,9 @@ var svgLayer = L.svg();
 svgLayer.addTo(myMap)
 
 
-const svg = d3.select("#map svg"),
-      width = +svg.attr("width"),
-      height = +svg.attr("height");
+var svg = d3.select('#map').select('svg');
+var width = +svg.attr("width"), height = +svg.attr("height");
+var flowMapG = svg.select('g').attr('class', 'leaflet-zoom-hide');
 
 // Projection from lat, long to x, y
 const projection = d3.geoMercator()
@@ -25,17 +29,25 @@ const projection = d3.geoMercator()
     .translate([width / 2, height / 1.5]);
 
 Promise.all([
-    loadDataSet("./datasets/dataset_denormalized_enriched_pruned.csv")
+    // loadDataSet("./datasets/dataset_denormalized_enriched_pruned.csv")
+    loadDataSet("./datasets/filtered_origin_RWA.csv")
 ]).then(function(data) {
     var migrationData = data[0];
-    const {countryToIso, isoToCountry} = createCountryISOMapping(migrationData);
-    console.log(countryToIso);
-    console.log(isoToCountry);
+    // const {countryToIso, isoToCountry} = createCountryISOMapping(migrationData);
+    // console.log(countryToIso);
+    // console.log(isoToCountry);
     visualizeMigration(migrationData);
 });
 
 function visualizeMigration(data) {
-    console.log(data);
+    // console.log(data);
+    data.forEach(d => d.migrants = +d.migrants);
+    const maxMigrantCount = d3.max(data, d => d.migrants);
+    const thicknessScale = d3.scaleLinear()
+        .domain([0, maxMigrantCount])
+        .range([1, 10]);
+
+    
 }
 
 
