@@ -15,7 +15,7 @@ d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/w
         .attr("d", d3.geoPath().projection(projection))
         .attr("fill", "#ddd")
         .attr("stroke", "#999");
-    d3.csv("filtered_USA.csv").then(data => {
+    d3.csv("filtered_origin_RWA.csv").then(data => {
         data.forEach(d => d.migrants = +d.migrants);
         const maxMigrantCount = d3.max(data, d => d.migrants);
         const thicknessScale = d3.scaleLinear()
