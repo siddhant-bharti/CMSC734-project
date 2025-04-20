@@ -1,4 +1,4 @@
-import {loadDataSet} from "./data-utils.js";
+import {loadDataSet, createCountryISOMapping} from "./data-utils.js";
 
 
 var myMap = L.map('map').setView([0, 0], 2);
@@ -27,8 +27,11 @@ const projection = d3.geoMercator()
 Promise.all([
     loadDataSet("./datasets/dataset_denormalized_enriched_pruned.csv")
 ]).then(function(data) {
-    var flowData = data[0];
-    visualizeMigration(flowData);
+    var migrationData = data[0];
+    const {countryToIso, isoToCountry} = createCountryISOMapping(migrationData);
+    console.log(countryToIso);
+    console.log(isoToCountry);
+    visualizeMigration(migrationData);
 });
 
 function visualizeMigration(data) {
