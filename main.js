@@ -125,21 +125,54 @@ function drawBarChart(links) {
         .attr("width", width)
         .attr("height", height);
 
-    console.log(links);
-    // const totalsByOrigin = {};
+    // Cluster the number of migrants by origin, and sum then up
+    const totalsByOrigin = {};
+    links.forEach(d => {
+        if (!totalsByOrigin[d.origin]) {
+            totalsByOrigin[d.origin] = 0;
+        }
+        totalsByOrigin[d.origin] += d.migrantCount;
+    });
 
-    // links.forEach(d => {
-    //     console.log(d);
-    //     if (!totalsByOrigin[d.origin]) {
-    //         totalsByOrigin[d.origin] = 0;
-    //     }
-    //     totalsByOrigin[d.origin] += d.migrantCount;
-    // });
+    // Log results
+    for (const origin in totalsByOrigin) {
+        console.log(`${origin}: ${totalsByOrigin[origin]}`);
+    }
 
-    // // Log results
-    // for (const origin in totalsByOrigin) {
-    //     console.log(`${origin}: ${totalsByOrigin[origin]}`);
-    // }
+    const data = Object.entries(totalsByOrigin).map(([origin, migrantCount]) => ({ origin, migrantCount }));
+    // data.sort((a, b) => d3.descending(a.migrantCount, b.migrantCount)).slice(0, 10);
+
+    const top10 = data.sort((a, b) => b.migrantCount - a.migrantCount).slice(0, 10);
+    const x = d3.scaleBand()
+        .domain(top10.map(d => d.origin))
+        .range([margin.left, width - margin.right])
+        .padding(0.1);
+    const y = d3.scaleLinear()
+        .domain([0, d3.max(top10, d => d.migrantCount)])
+        .nice()
+        .range([height - margin.bottom, margin.top]);
+    
+    svg.append("g")
+        .attr("fill", "steelblue")
+        .selectAll("rect")
+        .data(top10)
+        .enter()
+        .append("rect")
+        .attr("x", d => x(d.origin))
+        .attr("y", d => y(d.migrantCount))
+        .attr("height", d => y(0) - y(d.migrantCount))
+        .attr("width", x.bandwidth());
+    
+    svg.append("g")
+        .attr("transform", `translate(0,${height - margin.bottom})`)
+        .call(d3.axisBottom(x).tickFormat((d, i) => top10[i].origin).ticks(5))
+        .selectAll("text")
+        .attr("transform", "rotate(-45)")
+        .style("text-anchor", "end");
+    
+    svg.append("g")
+        .attr("transform", `translate(${margin.left},0)`)
+        .call(d3.axisLeft(y).ticks(10));
 }
 
 
