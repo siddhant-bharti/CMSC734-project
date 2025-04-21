@@ -56,8 +56,8 @@ function drawFlowMap(links) {
 function updateLayers() {
     nodeLinkG.selectAll('.grid-link')
     .attr('d', function(d) {
-        let origin = myMap.latLngToLayerPoint(d.origin);
-        let destination = myMap.latLngToLayerPoint(d.destination);
+        let origin = myMap.latLngToLayerPoint(d.originCoord);
+        let destination = myMap.latLngToLayerPoint(d.destinationCoord);
         
         let randomOffset = Math.random() * 100 - 50;
         
