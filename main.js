@@ -105,8 +105,6 @@ function drawSlider() {
 }
 
 function applyFilter(origin_country, start_year, end_year) {
-    console.log(global_data);
-    console.log(filtered_data);
 
     const parseYear = d3.timeParse("%Y");
     const startDate = parseYear(start_year.toString());
@@ -123,9 +121,6 @@ function applyFilter(origin_country, start_year, end_year) {
 
     // For sankey
     // We will get to it in future
-
-    console.log(global_data);
-    console.log(filtered_data);
 }
 
 function drawFlowMap() {
