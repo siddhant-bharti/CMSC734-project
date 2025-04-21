@@ -37,6 +37,10 @@ svg.append("defs").append("marker")
 // For curves in migration paths
 let randomOffset = Math.random() * 100 - 50;
 
+// Global variable for the data
+var global_data;
+var filtered_data;
+
 Promise.all([
     d3.csv('./datasets/dataset_denormalized_enriched_pruned.csv', function(row) {
         var link = {origin: row['originName'], originCoord: [+row['originLatitude'], +row['originLongitude']], destination: row['asylumName'], destinationCoord: [+row['asylumLatitude'], +row['asylumLongitude']], 
@@ -52,13 +56,16 @@ Promise.all([
 });
 
 function drawVisualizations(data) {
-    drawSlider(data[0]);
-    drawFlowMap(data[0]);
-    drawBarChart(data[0]);
-    drawSankeyDiagram(data[1]);
+    global_data = data;
+    filtered_data = data;
+    drawSlider();
+    drawFlowMap();
+    drawBarChart();
+    drawSankeyDiagram();
 }
 
-function drawSlider(links) {
+function drawSlider() {
+    var links = filtered_data[0];
 
     const maxYear = d3.max(links, d => d.year);
     const minYear = d3.min(links, d => d.year);
@@ -76,7 +83,8 @@ function drawSlider(links) {
 
     sliderRange.on('onchange', val => {
         console.log(val);
-    
+        console.log(global_data);
+        console.log(filtered_data);
     });
     
     // Add the slider to the DOM
@@ -93,6 +101,7 @@ function drawSlider(links) {
 }
 
 function drawFlowMap(links) {
+    var links = filtered_data[0];
     const filteredLinks = links.filter(d => d.origin === "China");
 
     const maxMigrantCount = d3.max(filteredLinks, d => d.migrantCount);
@@ -157,7 +166,9 @@ var sankey = d3.sankey()
 .nodePadding(290)
 .size([width, height]);
 
-function drawSankeyDiagram(graph) {
+function drawSankeyDiagram() {
+    var graph = filtered_data[1];
+
     sankey
       .nodes(graph.nodes)
       .links(graph.links)
@@ -222,7 +233,8 @@ function drawSankeyDiagram(graph) {
     }
 }
 
-function drawBarChart(links) {
+function drawBarChart() {
+    var links = filtered_data[0];
     const width = 600;
     const height = 600;
     const margin = { top: 30, right: 30, bottom: 50, left: 50 };
