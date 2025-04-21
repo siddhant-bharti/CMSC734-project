@@ -32,21 +32,10 @@ svg.append("defs").append("marker")
     .attr("orient", "auto")
     .append("path")
     .attr("d", "M 0 0 L 10 5 L 0 10 Z") 
-    .attr("fill", "blue");
+    .attr("fill", "black");
 
 // For curves in migration paths
 let randomOffset = Math.random() * 100 - 50;
-
-// Define the slider
-var sliderRange = d3
-    .sliderBottom()
-    .min(1960)
-    .max(2025)
-    .width(300)
-    .tickFormat(d3.timeFormat('%Y-%m-%d'))
-    .ticks(3)
-    .default([1960, 2025])
-    .fill('#85bb65');
 
 Promise.all([
     d3.csv('./datasets/dataset_denormalized_enriched_pruned.csv', function(row) {
@@ -56,11 +45,45 @@ Promise.all([
     })     
 ]).then(function(data) {
     var links = data[0];
+    drawSlider(links);
     drawFlowMap(links);
-    // sliderRange.min(1960).max(2025).default([1960, 2025]);
     drawBarChart(links);
     drawSankeyDiagram(links);
 });
+
+function drawSlider(links) {
+
+    const maxYear = d3.max(links, d => d.year);
+    const minYear = d3.min(links, d => d.year);
+
+    // Define the slider
+    var sliderRange = d3
+    .sliderBottom()
+    .min(new Date(minYear, 0, 1))
+    .max(new Date(maxYear, 0, 1))
+    .width(300)
+    .tickFormat(d3.timeFormat('%Y'))
+    .ticks(3)
+    .default([new Date(minYear, 0, 1), new Date(maxYear, 0, 1)])
+    .fill('#85bb65');
+
+    sliderRange.on('onchange', val => {
+        console.log(val);
+    
+    });
+    
+    // Add the slider to the DOM
+    const gRange = d3
+        .select('#slider-range')
+        .append('svg')
+        .attr('width', 500)
+        .attr('height', 100)
+        .append('g')
+        .attr('transform', 'translate(90,30)');
+    
+    gRange.call(sliderRange);
+    
+}
 
 function drawFlowMap(links) {
     const filteredLinks = links.filter(d => d.origin === "China");
@@ -175,19 +198,3 @@ function drawBarChart(links) {
         .call(d3.axisLeft(y).ticks(10));
 }
 
-
-sliderRange.on('onchange', val => {
-    console.log(val);
-
-});
-
-// Add the slider to the DOM
-const gRange = d3
-    .select('#slider-range')
-    .append('svg')
-    .attr('width', 500)
-    .attr('height', 100)
-    .append('g')
-    .attr('transform', 'translate(90,30)');
-
-gRange.call(sliderRange);
