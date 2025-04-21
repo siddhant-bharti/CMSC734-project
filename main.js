@@ -51,13 +51,14 @@ var sliderRange = d3
 Promise.all([
     d3.csv('./datasets/dataset_denormalized_enriched_pruned.csv', function(row) {
         var link = {origin: row['originName'], originCoord: [+row['originLatitude'], +row['originLongitude']], destination: row['asylumName'], destinationCoord: [+row['asylumLatitude'], +row['asylumLongitude']], 
-            migrantCount: +row['Count'], year: +row['Year']};
+            migrantCount: +row[' Count'].replace(/,/g, '').trim(), year: +row['Year']};
         return link; 
     })     
 ]).then(function(data) {
     var links = data[0];
     drawFlowMap(links);
     // sliderRange.min(1960).max(2025).default([1960, 2025]);
+    drawBarChart(links);
     drawSankeyDiagram(links);
 });
 
@@ -110,6 +111,35 @@ function updateLayers() {
 
 function drawSankeyDiagram(links) {
 
+}
+
+function drawBarChart(links) {
+    const width = 600;
+    const height = 600;
+    const margin = { top: 30, right: 30, bottom: 50, left: 50 };
+
+    d3.select("#bar").select("svg").remove();
+
+    const svg = d3.select("#bar")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+    console.log(links);
+    // const totalsByOrigin = {};
+
+    // links.forEach(d => {
+    //     console.log(d);
+    //     if (!totalsByOrigin[d.origin]) {
+    //         totalsByOrigin[d.origin] = 0;
+    //     }
+    //     totalsByOrigin[d.origin] += d.migrantCount;
+    // });
+
+    // // Log results
+    // for (const origin in totalsByOrigin) {
+    //     console.log(`${origin}: ${totalsByOrigin[origin]}`);
+    // }
 }
 
 
