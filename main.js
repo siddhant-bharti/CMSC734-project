@@ -56,16 +56,16 @@ Promise.all([
         return graph;
     })     
 ]).then(function(data) {
-    drawVisualizations(data)
-});
-
-function drawVisualizations(data) {
     global_data = data;
     filtered_data = data;
     maxYear = d3.max(data[0], d => d.year);
     minYear = d3.min(data[0], d => d.year);
     applyFilter("China", minYear, maxYear);
     drawSlider();
+    drawVisualizations();
+});
+
+function drawVisualizations() {
     drawFlowMap();
     drawBarChart();
     drawSankeyDiagram();
@@ -92,8 +92,7 @@ function drawSlider() {
         const startYear = startDate.getFullYear();
         const endYear = endDate.getFullYear();
         applyFilter("China", startYear, endYear);
-        console.log(global_data);
-        console.log(filtered_data);
+        drawVisualizations();
     });
     
     // Add the slider to the DOM
