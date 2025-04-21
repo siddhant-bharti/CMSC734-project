@@ -8,12 +8,12 @@ export function createCountryISOMapping(dataset) {
 
     dataset.forEach(row => {
         if(row.OriginISO) {
-            countryToIso[row.OriginName] = row.OriginISO;
-            isoToCountry[row.OriginISO] = row.OriginName;
+            countryToIso[row.origin] = row.OriginISO;
+            isoToCountry[row.OriginISO] = row.origin;
         }
         if(row.AsylumISO) {
-            countryToIso[row.AsylumName] = row.AsylumISO;
-            isoToCountry[row.AsylumISO] = row.AsylumName;
+            countryToIso[row.destination] = row.AsylumISO;
+            isoToCountry[row.AsylumISO] = row.destination;
         }
     });
     return {countryToIso, isoToCountry};

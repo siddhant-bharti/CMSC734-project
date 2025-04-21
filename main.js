@@ -45,10 +45,14 @@ var filtered_data;
 var maxYear;
 var minYear;
 
+// some mapping
+var countryToIso;
+var isoToCountry;
+
 Promise.all([
     d3.csv('./datasets/dataset_denormalized_enriched_pruned.csv', function(row) {
         var link = {origin: row['originName'], originCoord: [+row['originLatitude'], +row['originLongitude']], destination: row['asylumName'], destinationCoord: [+row['asylumLatitude'], +row['asylumLongitude']], 
-            migrantCount: +row[' Count'].replace(/,/g, '').trim(), year: +row['Year']};
+            migrantCount: +row[' Count'].replace(/,/g, '').trim(), year: +row['Year'], OriginISO: row['OriginISO'], AsylumISO: row['AsylumISO']};
         return link; 
     }),
     d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/data_sankey.json", function(error, graph){
@@ -59,6 +63,7 @@ Promise.all([
     filtered_data = data;
     maxYear = d3.max(data[0], d => d.year);
     minYear = d3.min(data[0], d => d.year);
+    countryToIso, isoToCountry = createCountryISOMapping(data[0]);
     applyFilter("China", minYear, maxYear);
     drawSlider();
     drawVisualizations();
