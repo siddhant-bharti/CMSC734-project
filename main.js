@@ -105,20 +105,27 @@ function drawSlider() {
 }
 
 function applyFilter(origin_country, start_year, end_year) {
+    console.log(global_data);
+    console.log(filtered_data);
+
     const parseYear = d3.timeParse("%Y");
     const startDate = parseYear(start_year.toString());
     const endDate = parseYear(end_year.toString());
     // console.log(startDate);
     // console.log(endDate);
+    filtered_data = global_data.slice();
 
     // For map, bar
-    filtered_data[0] = global_data[0].filter(d => {
+    filtered_data[0] = filtered_data[0].filter(d => {
         const yearDate = parseYear(d.year);
         return (d.origin === origin_country && yearDate >= startDate && yearDate <= endDate);
     });
 
     // For sankey
-    filtered_data[1] = global_data[1];
+    // We will get to it in future
+
+    console.log(global_data);
+    console.log(filtered_data);
 }
 
 function drawFlowMap() {
