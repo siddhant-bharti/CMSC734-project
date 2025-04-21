@@ -100,7 +100,7 @@ function drawSlider() {
     
 }
 
-function drawFlowMap(links) {
+function drawFlowMap() {
     var links = filtered_data[0];
     const filteredLinks = links.filter(d => d.origin === "China");
 
