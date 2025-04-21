@@ -48,12 +48,15 @@ Promise.all([
         return graph;
     })     
 ]).then(function(data) {
-    var links = data[0];
-    drawSlider(links);
-    drawFlowMap(links);
-    drawBarChart(links);
-    drawSankeyDiagram(data[1]);
+    drawVisualizations(data)
 });
+
+function drawVisualizations(data) {
+    drawSlider(data[0]);
+    drawFlowMap(data[0]);
+    drawBarChart(data[0]);
+    drawSankeyDiagram(data[1]);
+}
 
 function drawSlider(links) {
 
