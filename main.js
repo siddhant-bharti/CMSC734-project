@@ -274,12 +274,10 @@ function drawBarChart() {
     const totalsByDestination = {};
 
     links.forEach(d => {
-        if (d.origin === "China") {
-            if (!totalsByDestination[d.destination]) {
-                totalsByDestination[d.destination] = 0;
-            }
-            totalsByDestination[d.destination] += d.migrantCount;
+        if (!totalsByDestination[d.destination]) {
+            totalsByDestination[d.destination] = 0;
         }
+        totalsByDestination[d.destination] += d.migrantCount;
     });
 
     const data = Object.entries(totalsByDestination).map(([destination, migrantCount]) => ({ destination, migrantCount }));
