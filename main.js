@@ -41,6 +41,10 @@ let randomOffset = Math.random() * 100 - 50;
 var global_data;
 var filtered_data;
 
+// Years
+var maxYear;
+var minYear;
+
 Promise.all([
     d3.csv('./datasets/dataset_denormalized_enriched_pruned.csv', function(row) {
         var link = {origin: row['originName'], originCoord: [+row['originLatitude'], +row['originLongitude']], destination: row['asylumName'], destinationCoord: [+row['asylumLatitude'], +row['asylumLongitude']], 
@@ -58,6 +62,9 @@ Promise.all([
 function drawVisualizations(data) {
     global_data = data;
     filtered_data = data;
+    maxYear = d3.max(data[0], d => d.year);
+    minYear = d3.min(data[0], d => d.year);
+    applyFilter("China", minYear, maxYear);
     drawSlider();
     drawFlowMap();
     drawBarChart();
@@ -66,9 +73,6 @@ function drawVisualizations(data) {
 
 function drawSlider() {
     var links = filtered_data[0];
-
-    const maxYear = d3.max(links, d => d.year);
-    const minYear = d3.min(links, d => d.year);
 
     // Define the slider
     var sliderRange = d3
@@ -100,9 +104,15 @@ function drawSlider() {
     
 }
 
+function applyFilter(origin_country, start_year, end_year) {
+    // For map, bar
+    filtered_data[0] = global_data[0].filter(d => d.origin === origin_country);
+    // For sankey
+    filtered_data[1] = global_data[1];
+}
+
 function drawFlowMap() {
-    var links = filtered_data[0];
-    const filteredLinks = links.filter(d => d.origin === "China");
+    var filteredLinks = filtered_data[0];
 
     const maxMigrantCount = d3.max(filteredLinks, d => d.migrantCount);
     const minMigrantCount = d3.min(filteredLinks, d => d.migrantCount);
