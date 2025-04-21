@@ -6,3 +6,9 @@ body {
 #main {
     margin: 20px;
 }
+
+.link {
+    fill: none;
+    stroke: #000;
+    stroke-opacity: .2;
+}
