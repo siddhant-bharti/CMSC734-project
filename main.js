@@ -86,7 +86,12 @@ function drawSlider() {
     .fill('#85bb65');
 
     sliderRange.on('onchange', val => {
-        console.log(val);
+        const startDate = new Date(val[0]);
+        const endDate = new Date(val[1]);
+
+        const startYear = startDate.getFullYear();
+        const endYear = endDate.getFullYear();
+        applyFilter("China", startYear, endYear);
         console.log(global_data);
         console.log(filtered_data);
     });
