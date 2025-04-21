@@ -37,15 +37,27 @@ svg.append("defs").append("marker")
 // For curves in migration paths
 let randomOffset = Math.random() * 100 - 50;
 
+// Define the slider
+var sliderRange = d3
+    .sliderBottom()
+    .min(1960)
+    .max(2025)
+    .width(300)
+    .tickFormat(d3.timeFormat('%Y-%m-%d'))
+    .ticks(3)
+    .default([1960, 2025])
+    .fill('#85bb65');
+
 Promise.all([
     d3.csv('./datasets/dataset_denormalized_enriched_pruned.csv', function(row) {
         var link = {origin: row['originName'], originCoord: [+row['originLatitude'], +row['originLongitude']], destination: row['asylumName'], destinationCoord: [+row['asylumLatitude'], +row['asylumLongitude']], 
-            migrantCount: +row['Count'] };
+            migrantCount: +row['Count'], year: +row['Year']};
         return link; 
     })     
 ]).then(function(data) {
     var links = data[0];
     drawFlowMap(links);
+    // sliderRange.min(1960).max(2025).default([1960, 2025]);
     drawSankeyDiagram(links);
 });
 
@@ -101,5 +113,18 @@ function drawSankeyDiagram(links) {
 }
 
 
+sliderRange.on('onchange', val => {
+    console.log(val);
 
+});
 
+// Add the slider to the DOM
+const gRange = d3
+    .select('#slider-range')
+    .append('svg')
+    .attr('width', 500)
+    .attr('height', 100)
+    .append('g')
+    .attr('transform', 'translate(90,30)');
+
+gRange.call(sliderRange);
