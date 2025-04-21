@@ -232,15 +232,15 @@ function drawBarChart(links) {
         .attr("height", height);
 
     // console.log(links);
-    // const totalsByOrigin = {};
+    const totalsByOrigin = {};
 
-    // links.forEach(d => {
-    //     console.log(d);
-    //     if (!totalsByOrigin[d.origin]) {
-    //         totalsByOrigin[d.origin] = 0;
-    //     }
-    //     totalsByOrigin[d.origin] += d.migrantCount;
-    // });
+    links.forEach(d => {
+        // console.log(d);
+        if (!totalsByOrigin[d.origin]) {
+            totalsByOrigin[d.origin] = 0;
+        }
+        totalsByOrigin[d.origin] += d.migrantCount;
+    });
 
     // Log results
     // for (const origin in totalsByOrigin) {
