@@ -41,7 +41,6 @@ Promise.all([
     d3.csv('./datasets/dataset_denormalized_enriched_pruned.csv', function(row) {
         var link = {origin: row['originName'], originCoord: [+row['originLatitude'], +row['originLongitude']], destination: row['asylumName'], destinationCoord: [+row['asylumLatitude'], +row['asylumLongitude']], 
             migrantCount: +row[' Count'].replace(/,/g, '').trim(), year: +row['Year']};
-        console.log(link);
         return link; 
     }),
     d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/data_sankey.json", function(error, graph){
@@ -241,9 +240,9 @@ function drawBarChart(links) {
     });
 
     // Log results
-    for (const origin in totalsByOrigin) {
-        console.log(`${origin}: ${totalsByOrigin[origin]}`);
-    }
+    // for (const origin in totalsByOrigin) {
+    //     console.log(`${origin}: ${totalsByOrigin[origin]}`);
+    // }
 
     const data = Object.entries(totalsByOrigin).map(([origin, migrantCount]) => ({ origin, migrantCount }));
     // data.sort((a, b) => d3.descending(a.migrantCount, b.migrantCount)).slice(0, 10);
