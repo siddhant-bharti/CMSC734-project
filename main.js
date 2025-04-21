@@ -34,6 +34,9 @@ svg.append("defs").append("marker")
     .attr("d", "M 0 0 L 10 5 L 0 10 Z") 
     .attr("fill", "blue");
 
+// For curves in migration paths
+let randomOffset = Math.random() * 100 - 50;
+
 Promise.all([
     d3.csv('./datasets/dataset_denormalized_enriched_pruned.csv', function(row) {
         var link = {origin: row['originName'], originCoord: [+row['originLatitude'], +row['originLongitude']], destination: row['asylumName'], destinationCoord: [+row['asylumLatitude'], +row['asylumLongitude']], 
@@ -71,8 +74,6 @@ function updateLayers() {
     .attr('d', function(d) {
         let origin = myMap.latLngToLayerPoint(d.originCoord);
         let destination = myMap.latLngToLayerPoint(d.destinationCoord);
-        
-        let randomOffset = Math.random() * 100 - 50;
         
         let controlPoint = [
             (origin.x + destination.x) / 2,
