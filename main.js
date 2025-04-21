@@ -40,19 +40,14 @@ let randomOffset = Math.random() * 100 - 50;
 Promise.all([
     d3.csv('./datasets/dataset_denormalized_enriched_pruned.csv', function(row) {
         var link = {origin: row['originName'], originCoord: [+row['originLatitude'], +row['originLongitude']], destination: row['asylumName'], destinationCoord: [+row['asylumLatitude'], +row['asylumLongitude']], 
-            migrantCount: +row['Count'], year: +row['Year']};
+            migrantCount: +row[' Count'].replace(/,/g, '').trim(), year: +row['Year']};
         return link; 
     })     
 ]).then(function(data) {
     var links = data[0];
     drawSlider(links);
     drawFlowMap(links);
-    
-    // var min_year = new Date(1960, 0, 1);
-    // var max_year = new Date(2025, 0, 1);
-    // sliderRange.min(min_year).max(max_year).default([min_year, max_year]);
-    // d3.select('#slider-range').call(sliderRange);
-
+    drawBarChart(links);
     drawSankeyDiagram(links);
 });
 
@@ -140,3 +135,33 @@ function updateLayers() {
 function drawSankeyDiagram(links) {
 
 }
+
+function drawBarChart(links) {
+    const width = 600;
+    const height = 600;
+    const margin = { top: 30, right: 30, bottom: 50, left: 50 };
+
+    d3.select("#bar").select("svg").remove();
+
+    const svg = d3.select("#bar")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+    console.log(links);
+    // const totalsByOrigin = {};
+
+    // links.forEach(d => {
+    //     console.log(d);
+    //     if (!totalsByOrigin[d.origin]) {
+    //         totalsByOrigin[d.origin] = 0;
+    //     }
+    //     totalsByOrigin[d.origin] += d.migrantCount;
+    // });
+
+    // // Log results
+    // for (const origin in totalsByOrigin) {
+    //     console.log(`${origin}: ${totalsByOrigin[origin]}`);
+    // }
+}
+
