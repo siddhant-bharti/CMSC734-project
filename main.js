@@ -49,7 +49,6 @@ Promise.all([
     d3.csv('./datasets/dataset_denormalized_enriched_pruned.csv', function(row) {
         var link = {origin: row['originName'], originCoord: [+row['originLatitude'], +row['originLongitude']], destination: row['asylumName'], destinationCoord: [+row['asylumLatitude'], +row['asylumLongitude']], 
             migrantCount: +row[' Count'].replace(/,/g, '').trim(), year: +row['Year']};
-        // console.log(link);
         return link; 
     }),
     d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/data_sankey.json", function(error, graph){
@@ -113,8 +112,6 @@ function applyFilter(origin_country, start_year, end_year) {
     const parseYear = d3.timeParse("%Y");
     const startDate = parseYear(start_year.toString());
     const endDate = parseYear(end_year.toString());
-    // console.log(startDate);
-    // console.log(endDate);
     filtered_data = global_data.slice();
 
     // For map, bar
@@ -133,6 +130,8 @@ function drawFlowMap() {
     const maxMigrantCount = d3.max(filteredLinks, d => d.migrantCount);
     const minMigrantCount = d3.min(filteredLinks, d => d.migrantCount);
     const thicknessScale = d3.scaleLinear().domain([minMigrantCount, maxMigrantCount]).range([1, 10]);
+
+    nodeLinkG.selectAll('.grid-link').remove();
 
     nodeLinkG.selectAll('.grid-link')
     .data(filteredLinks)
