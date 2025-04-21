@@ -21,6 +21,19 @@ var svg = d3.select('#map').select('svg');
 var nodeLinkG = svg.select('g')
 .attr('class', 'leaflet-zoom-hide');
 
+// Arrow head
+svg.append("defs").append("marker")
+    .attr("id", "arrowhead")
+    .attr("viewBox", "0 0 10 10")
+    .attr("refX", 6)  
+    .attr("refY", 5)
+    .attr("markerWidth", 2)  
+    .attr("markerHeight", 2)
+    .attr("orient", "auto")
+    .append("path")
+    .attr("d", "M 0 0 L 10 5 L 0 10 Z") 
+    .attr("fill", "blue");
+
 Promise.all([
     d3.csv('./datasets/dataset_denormalized_enriched_pruned.csv', function(row) {
         var link = {origin: row['originName'], originCoord: [+row['originLatitude'], +row['originLongitude']], destination: row['asylumName'], destinationCoord: [+row['asylumLatitude'], +row['asylumLongitude']], 
@@ -74,7 +87,8 @@ function updateLayers() {
         let points = [[origin.x, origin.y], controlPoint, [destination.x, destination.y]];
         
         return line(points);
-    });
+    })
+    .attr("marker-end", "url(#arrowhead)");
     // .attr('x1', function(d){return myMap.latLngToLayerPoint(d.origin).x})
     // .attr('y1', function(d){return myMap.latLngToLayerPoint(d.origin).y})
     // .attr('x2', function(d){return myMap.latLngToLayerPoint(d.destination).x})
