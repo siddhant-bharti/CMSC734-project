@@ -231,28 +231,22 @@ function drawBarChart(links) {
         .attr("width", width)
         .attr("height", height);
 
-    // console.log(links);
-    const totalsByOrigin = {};
+    const totalsByDestination = {};
 
     links.forEach(d => {
-        // console.log(d);
-        if (!totalsByOrigin[d.origin]) {
-            totalsByOrigin[d.origin] = 0;
+        if (d.origin === "China") {
+            if (!totalsByDestination[d.destination]) {
+                totalsByDestination[d.destination] = 0;
+            }
+            totalsByDestination[d.destination] += d.migrantCount;
         }
-        totalsByOrigin[d.origin] += d.migrantCount;
     });
 
-    // Log results
-    // for (const origin in totalsByOrigin) {
-    //     console.log(`${origin}: ${totalsByOrigin[origin]}`);
-    // }
-
-    const data = Object.entries(totalsByOrigin).map(([origin, migrantCount]) => ({ origin, migrantCount }));
-    // data.sort((a, b) => d3.descending(a.migrantCount, b.migrantCount)).slice(0, 10);
+    const data = Object.entries(totalsByDestination).map(([destination, migrantCount]) => ({ destination, migrantCount }));
 
     const top10 = data.sort((a, b) => b.migrantCount - a.migrantCount).slice(0, 10);
     const x = d3.scaleBand()
-        .domain(top10.map(d => d.origin))
+        .domain(top10.map(d => d.destination))
         .range([margin.left, width - margin.right])
         .padding(0.1);
     const y = d3.scaleLinear()
@@ -266,14 +260,14 @@ function drawBarChart(links) {
         .data(top10)
         .enter()
         .append("rect")
-        .attr("x", d => x(d.origin))
+        .attr("x", d => x(d.destination))
         .attr("y", d => y(d.migrantCount))
         .attr("height", d => y(0) - y(d.migrantCount))
         .attr("width", x.bandwidth());
     
     svg.append("g")
         .attr("transform", `translate(0,${height - margin.bottom})`)
-        .call(d3.axisBottom(x).tickFormat((d, i) => top10[i].origin).ticks(5))
+        .call(d3.axisBottom(x).tickFormat((d, i) => top10[i].destination).ticks(5))
         .selectAll("text")
         .attr("transform", "rotate(-45)")
         .style("text-anchor", "end");
