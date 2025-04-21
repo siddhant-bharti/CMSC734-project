@@ -1,3 +1,5 @@
+import {loadDataSet, createCountryISOMapping} from "./data-utils.js";
+
 var map = d3.select('#map');
 var mapWidth = +map.attr('width');
 var mapHeight = +map.attr('height');
@@ -20,33 +22,38 @@ var nodeLinkG = svg.select('g')
 .attr('class', 'leaflet-zoom-hide');
 
 Promise.all([
-    d3.csv('./datasets/filtered_origin_RWA.csv', function(row) {
-        var link = {origin: [+row['origin_lat'], +row['origin_lon']], destination: [+row['dest_lat'], +row['dest_lon']], 
-            migrantCount: +row['migrants'] };
+    d3.csv('./datasets/dataset_denormalized_enriched_pruned.csv', function(row) {
+        var link = {origin: row['originName'], originCoord: [+row['originLatitude'], +row['originLongitude']], destination: row['asylumName'], destinationCoord: [+row['asylumLatitude'], +row['asylumLongitude']], 
+            migrantCount: +row['Count'] };
         return link; 
     })     
 ]).then(function(data) {
     var links = data[0];
     drawFlowMap(links);
+    drawSankeyDiagram(links);
 });
 
 function drawFlowMap(links) {
-    const maxMigrantCount = d3.max(links, d => d.migrantCount);
-    const thicknessScale = d3.scaleLinear().domain([0, maxMigrantCount]).range([1, 10]);
+    const filteredLinks = links.filter(d => d.origin === "China");
+
+    const maxMigrantCount = d3.max(filteredLinks, d => d.migrantCount);
+    const minMigrantCount = d3.min(filteredLinks, d => d.migrantCount);
+    const thicknessScale = d3.scaleLinear().domain([minMigrantCount, maxMigrantCount]).range([1, 10]);
 
     nodeLinkG.selectAll('.grid-link')
-    .data(links)
+    .data(filteredLinks)
     .enter().append('path')
     .attr('class', 'grid-link')
     .style('stroke', '#999')
     .style('stroke-opacity', 0.5)
     .style('fill', 'none')
     .style('stroke-width', function(d){ return thicknessScale(d.migrantCount) })      
+
     myMap.on('zoomend', updateLayers);
     updateLayers();
 }
 
-function updateLayers(){
+function updateLayers() {
     nodeLinkG.selectAll('.grid-link')
     .attr('d', function(d) {
         let origin = myMap.latLngToLayerPoint(d.origin);
@@ -72,6 +79,10 @@ function updateLayers(){
     // .attr('y1', function(d){return myMap.latLngToLayerPoint(d.origin).y})
     // .attr('x2', function(d){return myMap.latLngToLayerPoint(d.destination).x})
     // .attr('y2', function(d){return myMap.latLngToLayerPoint(d.destination).y});
+}
+
+function drawSankeyDiagram(links) {
+
 }
 
 
