@@ -20,7 +20,7 @@ var nodeLinkG = svg.select('g')
 .attr('class', 'leaflet-zoom-hide');
 
 Promise.all([
-    d3.csv('./datasets/test.csv', function(row) {
+    d3.csv('./datasets/filtered_origin_RWA.csv', function(row) {
         var link = {origin: [+row['origin_lat'], +row['origin_lon']], destination: [+row['dest_lat'], +row['dest_lon']], 
             migrantCount: +row['migrants'] };
         return link; 
@@ -36,10 +36,11 @@ function drawFlowMap(links) {
 
     nodeLinkG.selectAll('.grid-link')
     .data(links)
-    .enter().append('line')
+    .enter().append('path')
     .attr('class', 'grid-link')
     .style('stroke', '#999')
     .style('stroke-opacity', 0.5)
+    .style('fill', 'none')
     .style('stroke-width', function(d){ return thicknessScale(d.migrantCount) })      
     myMap.on('zoomend', updateLayers);
     updateLayers();
@@ -47,10 +48,30 @@ function drawFlowMap(links) {
 
 function updateLayers(){
     nodeLinkG.selectAll('.grid-link')
-    .attr('x1', function(d){return myMap.latLngToLayerPoint(d.origin).x})
-    .attr('y1', function(d){return myMap.latLngToLayerPoint(d.origin).y})
-    .attr('x2', function(d){return myMap.latLngToLayerPoint(d.destination).x})
-    .attr('y2', function(d){return myMap.latLngToLayerPoint(d.destination).y});
+    .attr('d', function(d) {
+        let origin = myMap.latLngToLayerPoint(d.origin);
+        let destination = myMap.latLngToLayerPoint(d.destination);
+        
+        let randomOffset = Math.random() * 100 - 50;
+        
+        let controlPoint = [
+            (origin.x + destination.x) / 2,
+            Math.min(origin.y, destination.y) + randomOffset
+        ];
+        
+        let line = d3.line()
+            .x(d => d[0])
+            .y(d => d[1])
+            .curve(d3.curveBasis);
+            
+        let points = [[origin.x, origin.y], controlPoint, [destination.x, destination.y]];
+        
+        return line(points);
+    });
+    // .attr('x1', function(d){return myMap.latLngToLayerPoint(d.origin).x})
+    // .attr('y1', function(d){return myMap.latLngToLayerPoint(d.origin).y})
+    // .attr('x2', function(d){return myMap.latLngToLayerPoint(d.destination).x})
+    // .attr('y2', function(d){return myMap.latLngToLayerPoint(d.destination).y});
 }
 
 
