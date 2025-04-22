@@ -313,3 +313,28 @@ function drawBarChart() {
         .call(d3.axisLeft(y).ticks(10));
 }
 
+// Sample data for dropdown
+const options = ["Apple", "Banana", "Cherry", "Date"];
+
+// Select the dropdown element
+const dropdown = d3.select("#origin-drop-down");
+
+// Populate the dropdown options
+dropdown.selectAll("option")
+  .data(options)
+  .enter()
+  .append("option")
+  .text(d => d)
+  .attr("value", d => d);
+
+// Event handler for when the dropdown value changes
+dropdown.on("change", function () {
+  const selectedValue = d3.select(this).property("value");
+  handleDropdownChange(selectedValue);
+});
+
+// Function to handle dropdown changes
+function handleDropdownChange(value) {
+  console.log("Selected:", value);
+  // You can do anything here with the selected value
+}

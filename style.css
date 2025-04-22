@@ -12,3 +12,11 @@ body {
     stroke: #000;
     stroke-opacity: .2;
 }
+
+#dropdown_container {
+    width: 50%;
+}
+  
+.selection {
+    width: 50%;
+}
