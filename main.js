@@ -268,55 +268,86 @@ function drawBarChart() {
     const width = 600;
     const height = 600;
     const margin = { top: 30, right: 30, bottom: 50, left: 50 };
+    const barHeight = 25;
 
     d3.select("#bar").select("svg").remove();
 
-    const svg = d3.select("#bar")
-        .append("svg")
-        .attr("width", width)
-        .attr("height", height);
+    // const svg = d3.select("#bar")
+    //     .append("svg")
+    //     .attr("width", width)
+    //     .attr("height", height);
 
     const totalsByDestination = {};
 
     links.forEach(d => {
         if (!totalsByDestination[d.destination]) {
-            totalsByDestination[d.destination] = 0;
+            totalsByDestination[d.destination] = { migrantCount: 0, AsylumISO: d.AsylumISO };
         }
-        totalsByDestination[d.destination] += d.migrantCount;
+        totalsByDestination[d.destination].migrantCount += d.migrantCount;
     });
+    
+    // Now map into a clean array
+    const data = Object.entries(totalsByDestination).map(([destination, info]) => ({
+        destination,
+        migrantCount: info.migrantCount,
+        AsylumISO: info.AsylumISO
+    }));
 
-    const data = Object.entries(totalsByDestination).map(([destination, migrantCount]) => ({ destination, migrantCount }));
+    const sorteddata = data.sort((a, b) => b.migrantCount - a.migrantCount);
+    
+    const scrollableHeight = sorteddata.length * barHeight + margin.top + margin.bottom;
 
-    const top10 = data.sort((a, b) => b.migrantCount - a.migrantCount).slice(0, 10);
-    const x = d3.scaleBand()
-        .domain(top10.map(d => d.destination))
+    const svg = d3.select("#bar")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", scrollableHeight);
+    
+    console.log("Max migrant: ", d3.max(sorteddata, d => d.migrantCount));
+    const x = d3.scaleLinear()
+        .domain([0, d3.max(sorteddata, d => d.migrantCount)])
+        .nice()
+        .range([margin.right, width - margin.left]);
+
+    const xlabel = d3.scaleLinear()
+        .domain([0, d3.max(sorteddata, d => d.migrantCount)])
+        .nice()
+        .range([50, width - margin.left]);
+
+    const y = d3.scaleBand()
+        .domain(sorteddata.map(d => d.destination))
         .range([margin.left, width - margin.right])
         .padding(0.1);
-    const y = d3.scaleLinear()
-        .domain([0, d3.max(top10, d => d.migrantCount)])
-        .nice()
-        .range([height - margin.bottom, margin.top]);
+
     
     svg.append("g")
         .attr("fill", "steelblue")
         .selectAll("rect")
-        .data(top10)
+        .data(sorteddata)
         .enter()
         .append("rect")
-        .attr("x", d => x(d.destination))
-        .attr("y", d => y(d.migrantCount))
-        .attr("height", d => y(0) - y(d.migrantCount))
-        .attr("width", x.bandwidth());
+        .attr("x", 50)
+        .attr("y", (d, i) => margin.top + i * barHeight)
+        .attr("height", barHeight-1)
+        .attr("width", d => x(d.migrantCount)-x(0));
+    
     
     svg.append("g")
-        .attr("transform", `translate(0,${height - margin.bottom})`)
-        .call(d3.axisBottom(x).tickFormat((d, i) => top10[i].destination).ticks(5))
         .selectAll("text")
-        .attr("transform", "rotate(-45)")
-        .style("text-anchor", "end");
+        .data(sorteddata)
+        .enter()
+        .append("text")
+        .attr("x", 45)  // slightly left of the bar start (x = 50)
+        .attr("y", (d, i) => margin.top + i * barHeight + (barHeight / 2))
+        .attr("dy", "0.35em")  // vertical centering
+        .attr("text-anchor", "end")
+        .text(d => d.AsylumISO)
+        .style("font-size", "10px");
     
     svg.append("g")
-        .attr("transform", `translate(${margin.left},0)`)
-        .call(d3.axisLeft(y).ticks(10));
+        .attr("transform", `translate(0, ${margin.top - 5})`)  // place just above bars
+        .call(d3.axisTop(xlabel).ticks(5))
+        .selectAll("text")
+        .style("font-size", "10px");
+
 }
 
