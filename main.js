@@ -115,10 +115,9 @@ function drawSlider() {
 function originDropDown() {
     const options = ["NONE"];
 
-    Object.keys(countryToIso).forEach(country => {
+    Object.keys(countryToIso).sort().forEach(country => {
         options.push(country);
     });
-    
 
     const dropdown = d3.select("#origin-drop-down");
 
@@ -145,10 +144,9 @@ function originDropDown() {
 function destinationDropDown() {
     const options = ["NONE"];
 
-    Object.keys(countryToIso).forEach(country => {
+    Object.keys(countryToIso).sort().forEach(country => {
         options.push(country);
     });
-    
 
     const dropdown = d3.select("#destination-drop-down");
 
