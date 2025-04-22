@@ -52,7 +52,7 @@ var isoToCountry;
 Promise.all([
     d3.csv('./datasets/dataset_denormalized_enriched_pruned.csv', function(row) {
         var link = {origin: row['originName'], originCoord: [+row['originLatitude'], +row['originLongitude']], destination: row['asylumName'], destinationCoord: [+row['asylumLatitude'], +row['asylumLongitude']], 
-            migrantCount: +row[' Count'].replace(/,/g, '').trim(), year: +row['Year'], OriginISO: row['OriginISO'], AsylumISO: row['AsylumISO']};
+            destinationRegion: row['AsylumRegion'], migrantCount: +row[' Count'].replace(/,/g, '').trim(), year: +row['Year'], OriginISO: row['OriginISO'], AsylumISO: row['AsylumISO']};
         return link; 
     })   
 ]).then(function(data) {
@@ -61,7 +61,7 @@ Promise.all([
     maxYear = d3.max(data[0], d => d.year);
     minYear = d3.min(data[0], d => d.year);
     countryToIso, isoToCountry = createCountryISOMapping(data[0]);
-    applyFilter("China", minYear, maxYear);
+    applyFilter("China", "China", minYear, maxYear);
     drawSlider();
     drawVisualizations();
 });
@@ -92,7 +92,7 @@ function drawSlider() {
 
         const startYear = startDate.getFullYear();
         const endYear = endDate.getFullYear();
-        applyFilter("China", startYear, endYear);
+        applyFilter("China", "China", startYear, endYear);
         drawVisualizations();
     });
     
@@ -102,14 +102,16 @@ function drawSlider() {
     
 }
 
-function applyFilter(origin_country, start_year, end_year) {
+function applyFilter(origin_country, destination_country, start_year, end_year) {
 
     const parseYear = d3.timeParse("%Y");
     const startDate = parseYear(start_year.toString());
     const endDate = parseYear(end_year.toString());
     filtered_data = global_data.slice();
 
-    // For map, bar
+    //TODO: Filter should be optional on the provision of origin/destination
+
+    // For map, bar, sankey
     filtered_data[0] = filtered_data[0].filter(d => {
         const yearDate = parseYear(d.year);
         return (d.origin === origin_country && yearDate >= startDate && yearDate <= endDate);
@@ -168,19 +170,27 @@ function updateLayers() {
 function drawSankeyDiagram() {
     const rawData = filtered_data[0];
     const nodeNames = Array.from(
-        new Set(rawData.flatMap(d => [d.origin, d.destination]))
+        new Set(rawData.flatMap(d => [d.origin, d.destinationRegion, d.destination]))
     );
-    const nodes = nodeNames.map(name => ({ name }));
+    const nodes = nodeNames.map((name, index) => ({ name, index }));
+    const nodeIndexMap = new Map(nodes.map(n => [n.name, n.index]));
     const linkMap = new Map();
     rawData.forEach(d => {
-        const source = nodeNames.indexOf(d.origin);
-        const target = nodeNames.indexOf(d.destination);
-        const key = `${source}->${target}`;
-        if (!linkMap.has(key)) {
-            linkMap.set(key, { source, target, value: 0 });
+        const originIdx = nodeIndexMap.get(d.origin);
+        const regionIdx = nodeIndexMap.get(d.destinationRegion);
+        const destIdx = nodeIndexMap.get(d.destination);
+        const key1 = `${originIdx}->${regionIdx}`;
+        const key2 = `${regionIdx}->${destIdx}`;
+        if (!linkMap.has(key1)) {
+            linkMap.set(key1, { source: originIdx, target: regionIdx, value: 0 });
         }
-        linkMap.get(key).value += d.migrantCount;
+        linkMap.get(key1).value += d.migrantCount;
+        if (!linkMap.has(key2)) {
+            linkMap.set(key2, { source: regionIdx, target: destIdx, value: 0 });
+        }
+        linkMap.get(key2).value += d.migrantCount;
     });
+    console.log(linkMap);
     const links = Array.from(linkMap.values());
 
     d3.select("#sankey").select("svg").remove();
