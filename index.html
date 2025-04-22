@@ -9,12 +9,17 @@
     <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-    <div id="slider-range"></div>
+    <!-- <div id="slider-range"></div> -->
+    <div id="slider-range-container">
+        <svg id="slider-svg" width="500" height="100">
+          <g id="slider-g" transform="translate(90,30)"></g>
+        </svg>
+    </div>
     <div id="main">
         <div id="map" style="width: 1200px; height: 600px; border: 1px solid #777;"></div>
         <div style="display: flex;">
             <div id="sankey" style="height: 600px; width: 600px; border: 1px solid #777; overflow: auto"></div>
-            <div id="bar" style="height: 600px; width: 600px; border: 1px solid #777;"></div>
+            <div id="bar" style="height: 600px; width: 600px; overflow-y: auto; border: 1px solid #777;"></div>
         </div>
     </div>
 </body>
@@ -29,4 +34,3 @@
 <script src="https://unpkg.com/d3-simple-slider"></script>
 <script type="module" src="./main.js"></script>
 </html>
-
