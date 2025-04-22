@@ -84,10 +84,22 @@ Promise.all([
     drawVisualizations();
 });
 
+function doDrawSankey() {
+    if (originCountry === "NONE" && destinationCountry === "NONE") {
+        return false;
+    } else if (originCountry !== "NONE" && destinationCountry !== "NONE") {
+        return false;
+    }
+    return true;
+}
+
 function drawVisualizations() {
     drawFlowMap();
     drawBarChart();
-    drawSankeyDiagram();
+    if (doDrawSankey()) {
+        // console.log("Draw Sankey")
+        drawSankeyDiagram();
+    }
 }
 
 function drawSlider() {
