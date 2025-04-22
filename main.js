@@ -52,6 +52,7 @@ var destinationCountry = "NONE";  // store origin
 // some mapping
 var countryToIso;
 var isoToCountry;
+var asylumToRegion = {};
 
 Promise.all([
     d3.csv('./datasets/dataset_denormalized_enriched_pruned.csv', function(row) {
@@ -69,6 +70,13 @@ Promise.all([
     const mappings = createCountryISOMapping(data[0]);
     countryToIso = mappings.countryToIso; 
     isoToCountry = mappings.isoToCountry;
+
+    global_data[0].forEach(row => {
+        if(row.destination) {
+            asylumToRegion[row.destination] = row.destinationRegion;
+        }
+    });
+
     applyFilter();
     drawSlider();
     originDropDown();
@@ -135,7 +143,6 @@ function originDropDown() {
 
     function handleDropdownChange(value) {
         originCountry = value;
-        console.log("Selected:", originCountry);
         applyFilter();
         drawVisualizations();
     }
@@ -164,7 +171,6 @@ function destinationDropDown() {
 
     function handleDropdownChange(value) {
         destinationCountry = value;
-        console.log("Selected:", destinationCountry);
         applyFilter();
         drawVisualizations();
     }
