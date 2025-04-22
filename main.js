@@ -91,18 +91,17 @@ function drawVisualizations() {
 }
 
 function drawSlider() {
-    var links = filtered_data[0];
-
-    // Define the slider
+    var slider_min_year = new Date(minYear, 0, 1);
+    var slider_max_year = new Date(maxYear, 0, 1);
     var sliderRange = d3
     .sliderBottom()
-    .min(new Date(minYear, 0, 1))
-    .max(new Date(maxYear, 0, 1))
+    .min(slider_min_year)
+    .max(slider_max_year)
     .width(300)
     .tickFormat(d3.timeFormat('%Y'))
-    .ticks(3)
-    .default([new Date(minYear, 0, 1), new Date(maxYear, 0, 1)])
-    .fill('#85bb65');
+    .ticks(8)
+    .default([slider_min_year, slider_max_year])
+    .fill('blue');
 
     sliderRange.on('onchange', val => {
         const startDate = new Date(val[0]);
@@ -114,7 +113,7 @@ function drawSlider() {
         drawVisualizations();
     });
     
-    const gRange =d3.select('#slider-g');
+    const gRange =d3.select('#slider-range');
     
     gRange.call(sliderRange);
     
@@ -186,9 +185,6 @@ function applyFilter() {
     //TODO: Filter should be optional on the provision of origin/destination
 
     // For map, bar, sankey
-    console.log(originCountry);
-    console.log(destinationCountry);
-
     filtered_data[0] = filtered_data[0].filter(d => {
         const yearDate = parseYear(d.year);
         if (originCountry === "NONE" && destinationCountry === "NONE") {
@@ -202,8 +198,6 @@ function applyFilter() {
             return (d.origin === originCountry && d.destination === destinationCountry && yearDate >= startDate && yearDate <= endDate);
         }
     });
-    console.log(filtered_data[0]);
-    console.log(global_data[0]);
 }
 
 function drawFlowMap() {
