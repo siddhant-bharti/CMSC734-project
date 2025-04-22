@@ -52,19 +52,16 @@ var isoToCountry;
 Promise.all([
     d3.csv('./datasets/dataset_denormalized_enriched_pruned.csv', function(row) {
         var link = {origin: row['originName'], originCoord: [+row['originLatitude'], +row['originLongitude']], destination: row['asylumName'], destinationCoord: [+row['asylumLatitude'], +row['asylumLongitude']], 
-            migrantCount: +row[' Count'].replace(/,/g, '').trim(), year: +row['Year'], OriginISO: row['OriginISO'], AsylumISO: row['AsylumISO']};
+            destinationRegion: row['AsylumRegion'], migrantCount: +row[' Count'].replace(/,/g, '').trim(), year: +row['Year'], OriginISO: row['OriginISO'], AsylumISO: row['AsylumISO']};
         return link; 
-    }),
-    d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/data_sankey.json", function(error, graph){
-        return graph;
-    })     
+    })   
 ]).then(function(data) {
     global_data = data;
     filtered_data = data;
     maxYear = d3.max(data[0], d => d.year);
     minYear = d3.min(data[0], d => d.year);
     countryToIso, isoToCountry = createCountryISOMapping(data[0]);
-    applyFilter("China", minYear, maxYear);
+    applyFilter("China", "China", minYear, maxYear);
     drawSlider();
     drawVisualizations();
 });
@@ -95,7 +92,7 @@ function drawSlider() {
 
         const startYear = startDate.getFullYear();
         const endYear = endDate.getFullYear();
-        applyFilter("China", startYear, endYear);
+        applyFilter("China", "China", startYear, endYear);
         drawVisualizations();
     });
     
@@ -105,21 +102,20 @@ function drawSlider() {
     
 }
 
-function applyFilter(origin_country, start_year, end_year) {
+function applyFilter(origin_country, destination_country, start_year, end_year) {
 
     const parseYear = d3.timeParse("%Y");
     const startDate = parseYear(start_year.toString());
     const endDate = parseYear(end_year.toString());
     filtered_data = global_data.slice();
 
-    // For map, bar
+    //TODO: Filter should be optional on the provision of origin/destination
+
+    // For map, bar, sankey
     filtered_data[0] = filtered_data[0].filter(d => {
         const yearDate = parseYear(d.year);
         return (d.origin === origin_country && yearDate >= startDate && yearDate <= endDate);
     });
-
-    // For sankey
-    // We will get to it in future
 }
 
 function drawFlowMap() {
@@ -171,78 +167,98 @@ function updateLayers() {
     // .attr('y2', function(d){return myMap.latLngToLayerPoint(d.destination).y});
 }
 
-
-var margin = {top: 10, right: 10, bottom: 10, left: 10},
-    width = 600 - margin.left - margin.right,
-    height = 600 - margin.top - margin.bottom;
-
-var svg = d3.select("#sankey").append("svg")
-.attr("width", width + margin.left + margin.right)
-.attr("height", height + margin.top + margin.bottom)
-.append("g")
-.attr("transform","translate(" + margin.left + "," + margin.top + ")");
-
-// var color = d3.scaleOrdinal(d3.schemeCategory20);
-
-var sankey = d3.sankey()
-.nodeWidth(36)
-.nodePadding(290)
-.size([width, height]);
-
 function drawSankeyDiagram() {
-    var graph = filtered_data[1];
+    const rawData = filtered_data[0];
+    const nodeNames = Array.from(
+        new Set(rawData.flatMap(d => [d.origin, d.destinationRegion, d.destination]))
+    );
+    const nodes = nodeNames.map((name, index) => ({ name, index }));
+    const nodeIndexMap = new Map(nodes.map(n => [n.name, n.index]));
+    const linkMap = new Map();
+    rawData.forEach(d => {
+        const originIdx = nodeIndexMap.get(d.origin);
+        const regionIdx = nodeIndexMap.get(d.destinationRegion);
+        const destIdx = nodeIndexMap.get(d.destination);
+        const key1 = `${originIdx}->${regionIdx}`;
+        const key2 = `${regionIdx}->${destIdx}`;
+        if (!linkMap.has(key1)) {
+            linkMap.set(key1, { source: originIdx, target: regionIdx, value: 0 });
+        }
+        linkMap.get(key1).value += d.migrantCount;
+        if (!linkMap.has(key2)) {
+            linkMap.set(key2, { source: regionIdx, target: destIdx, value: 0 });
+        }
+        linkMap.get(key2).value += d.migrantCount;
+    });
+    console.log(linkMap);
+    const links = Array.from(linkMap.values());
+
+    d3.select("#sankey").select("svg").remove();
+
+    var color = d3.scaleOrdinal(d3.schemeCategory10);
+
+    var margin = {top: 10, right: 10, bottom: 10, left: 10},
+    width = 600 - margin.left - margin.right,
+    height = 1200 - margin.top - margin.bottom;
+
+    var svg = d3.select("#sankey").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform","translate(" + margin.left + "," + margin.top + ")");
+
+    var sankey = d3.sankey()
+    .nodeWidth(15)
+    .nodePadding(8)
+    .size([width, height]);
 
     sankey
-      .nodes(graph.nodes)
-      .links(graph.links)
-      .layout(1);
+    .nodes(nodes)
+    .links(links)
+    .layout(1);
 
-    // add in the links
     var link = svg.append("g")
-        .selectAll(".link")
-        .data(graph.links)
-        .enter()
-        .append("path")
-        .attr("class", "link")
-        .attr("d", sankey.link() )
-        .style("stroke-width", function(d) { return Math.max(1, d.dy); })
-        .sort(function(a, b) { return b.dy - a.dy; });
+    .selectAll(".link")
+    .data(links)
+    .enter()
+    .append("path")
+    .attr("class", "link")
+    .attr("d", sankey.link() )
+    .style("stroke-width", function(d) { return Math.max(1, d.dy); })
+    .sort(function(a, b) { return b.dy - a.dy; });
 
-    // add in the nodes
     var node = svg.append("g")
-        .selectAll(".node")
-        .data(graph.nodes)
-        .enter().append("g")
-        .attr("class", "node")
-        .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
-        .call(d3.drag()
-            .subject(function(d) { return d; })
-            .on("start", function() { this.parentNode.appendChild(this); })
-        .on("drag", dragmove));
+    .selectAll(".node")
+    .data(nodes)
+    .enter().append("g")
+    .attr("class", "node")
+    .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
+    .call(d3.drag()
+    .subject(function(d) { return d; })
+    .on("start", function() { this.parentNode.appendChild(this); })
+    .on("drag", dragmove));
 
-    // add the rectangles for the nodes
     node
     .append("rect")
-        .attr("height", function(d) { return d.dy; })
-        .attr("width", sankey.nodeWidth())
-        // Add hover text
-        .append("title")
-        .text(function(d) { return d.name + "\n" + "There is " + d.value + " stuff in this node"; });
+    .attr("height", function(d) { return d.dy; })
+    .attr("width", sankey.nodeWidth())
+    .style("fill", function(d) { return d.color = color(d.name.replace(/ .*/, "")); })
+    .style("stroke", function(d) { return d3.rgb(d.color).darker(2); })
+    .append("title")
+    .text(function(d) { return d.name + "\n" + "There is " + d.value + " stuff in this node"; });
 
-    // add in the title for the nodes
     node
     .append("text")
-        .attr("x", -6)
-        .attr("y", function(d) { return d.dy / 2; })
-        .attr("dy", ".35em")
-        .attr("text-anchor", "end")
-        .attr("transform", null)
-        .text(function(d) { return d.name; })
+    .attr("x", -6)
+    .attr("y", function(d) { return d.dy / 2; })
+    .attr("dy", ".35em")
+    .attr("text-anchor", "end")
+    .attr("transform", null)
+    .text(function(d) { return d.name; })
     .filter(function(d) { return d.x < width / 2; })
-        .attr("x", 6 + sankey.nodeWidth())
-        .attr("text-anchor", "start");
+    .attr("x", 6 + sankey.nodeWidth())
+    .attr("text-anchor", "start");
 
-    // the function for moving the nodes
     function dragmove(d) {
         d3.select(this)
         .attr("transform",
@@ -261,56 +277,87 @@ function drawBarChart() {
     const width = 600;
     const height = 600;
     const margin = { top: 30, right: 30, bottom: 50, left: 50 };
+    const barHeight = 25;
 
     d3.select("#bar").select("svg").remove();
 
-    const svg = d3.select("#bar")
-        .append("svg")
-        .attr("width", width)
-        .attr("height", height);
+    // const svg = d3.select("#bar")
+    //     .append("svg")
+    //     .attr("width", width)
+    //     .attr("height", height);
 
     const totalsByDestination = {};
 
     links.forEach(d => {
         if (!totalsByDestination[d.destination]) {
-            totalsByDestination[d.destination] = 0;
+            totalsByDestination[d.destination] = { migrantCount: 0, AsylumISO: d.AsylumISO };
         }
-        totalsByDestination[d.destination] += d.migrantCount;
+        totalsByDestination[d.destination].migrantCount += d.migrantCount;
     });
+    
+    // Now map into a clean array
+    const data = Object.entries(totalsByDestination).map(([destination, info]) => ({
+        destination,
+        migrantCount: info.migrantCount,
+        AsylumISO: info.AsylumISO
+    }));
 
-    const data = Object.entries(totalsByDestination).map(([destination, migrantCount]) => ({ destination, migrantCount }));
+    const sorteddata = data.sort((a, b) => b.migrantCount - a.migrantCount);
+    
+    const scrollableHeight = sorteddata.length * barHeight + margin.top + margin.bottom;
 
-    const top10 = data.sort((a, b) => b.migrantCount - a.migrantCount).slice(0, 10);
-    const x = d3.scaleBand()
-        .domain(top10.map(d => d.destination))
+    const svg = d3.select("#bar")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", scrollableHeight);
+    
+    console.log("Max migrant: ", d3.max(sorteddata, d => d.migrantCount));
+    const x = d3.scaleLinear()
+        .domain([0, d3.max(sorteddata, d => d.migrantCount)])
+        .nice()
+        .range([margin.right, width - margin.left]);
+
+    const xlabel = d3.scaleLinear()
+        .domain([0, d3.max(sorteddata, d => d.migrantCount)])
+        .nice()
+        .range([50, width - margin.left]);
+
+    const y = d3.scaleBand()
+        .domain(sorteddata.map(d => d.destination))
         .range([margin.left, width - margin.right])
         .padding(0.1);
-    const y = d3.scaleLinear()
-        .domain([0, d3.max(top10, d => d.migrantCount)])
-        .nice()
-        .range([height - margin.bottom, margin.top]);
+
     
     svg.append("g")
         .attr("fill", "steelblue")
         .selectAll("rect")
-        .data(top10)
+        .data(sorteddata)
         .enter()
         .append("rect")
-        .attr("x", d => x(d.destination))
-        .attr("y", d => y(d.migrantCount))
-        .attr("height", d => y(0) - y(d.migrantCount))
-        .attr("width", x.bandwidth());
+        .attr("x", 50)
+        .attr("y", (d, i) => margin.top + i * barHeight)
+        .attr("height", barHeight-1)
+        .attr("width", d => x(d.migrantCount)-x(0));
+    
     
     svg.append("g")
-        .attr("transform", `translate(0,${height - margin.bottom})`)
-        .call(d3.axisBottom(x).tickFormat((d, i) => top10[i].destination).ticks(5))
         .selectAll("text")
-        .attr("transform", "rotate(-45)")
-        .style("text-anchor", "end");
+        .data(sorteddata)
+        .enter()
+        .append("text")
+        .attr("x", 45)  // slightly left of the bar start (x = 50)
+        .attr("y", (d, i) => margin.top + i * barHeight + (barHeight / 2))
+        .attr("dy", "0.35em")  // vertical centering
+        .attr("text-anchor", "end")
+        .text(d => d.AsylumISO)
+        .style("font-size", "10px");
     
     svg.append("g")
-        .attr("transform", `translate(${margin.left},0)`)
-        .call(d3.axisLeft(y).ticks(10));
+        .attr("transform", `translate(0, ${margin.top - 5})`)  // place just above bars
+        .call(d3.axisTop(xlabel).ticks(5))
+        .selectAll("text")
+        .style("font-size", "10px");
+
 }
 
 // Sample data for dropdown
