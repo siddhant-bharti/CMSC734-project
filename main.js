@@ -99,14 +99,7 @@ function drawSlider() {
         drawVisualizations();
     });
     
-    // Add the slider to the DOM
-    const gRange = d3
-        .select('#slider-range')
-        .append('svg')
-        .attr('width', 500)
-        .attr('height', 100)
-        .append('g')
-        .attr('transform', 'translate(90,30)');
+    const gRange =d3.select('#slider-g');
     
     gRange.call(sliderRange);
     
