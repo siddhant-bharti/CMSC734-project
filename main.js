@@ -42,8 +42,12 @@ var global_data;
 var filtered_data;
 
 // Years
-var maxYear;
-var minYear;
+var maxYear;  // stores max year of the dataset
+var minYear;  // stores mins year of the dataset
+var startYear;  // store start year for the filter
+var endYear;  // store end year for the filter
+var originCountry = "NONE";  // store origin
+var destinationCountry = "NONE";  // store origin
 
 // some mapping
 var countryToIso;
@@ -60,9 +64,15 @@ Promise.all([
     filtered_data = data;
     maxYear = d3.max(data[0], d => d.year);
     minYear = d3.min(data[0], d => d.year);
-    countryToIso, isoToCountry = createCountryISOMapping(data[0]);
-    applyFilter("China", "China", minYear, maxYear);
+    startYear = minYear;
+    endYear = maxYear;
+    const mappings = createCountryISOMapping(data[0]);
+    countryToIso = mappings.countryToIso; 
+    isoToCountry = mappings.isoToCountry;
+    applyFilter();
     drawSlider();
+    originDropDown();
+    destinationDropDown();
     drawVisualizations();
 });
 
@@ -90,9 +100,9 @@ function drawSlider() {
         const startDate = new Date(val[0]);
         const endDate = new Date(val[1]);
 
-        const startYear = startDate.getFullYear();
-        const endYear = endDate.getFullYear();
-        applyFilter("China", "China", startYear, endYear);
+        startYear = startDate.getFullYear();
+        endYear = endDate.getFullYear();
+        applyFilter();
         drawVisualizations();
     });
     
@@ -102,20 +112,94 @@ function drawSlider() {
     
 }
 
-function applyFilter(origin_country, destination_country, start_year, end_year) {
+function originDropDown() {
+    const options = ["NONE"];
+
+    Object.keys(countryToIso).forEach(country => {
+        options.push(country);
+    });
+    
+
+    const dropdown = d3.select("#origin-drop-down");
+
+    dropdown.selectAll("option")
+    .data(options)
+    .enter()
+    .append("option")
+    .text(d => d)
+    .attr("value", d => d);
+
+    dropdown.on("change", function () {
+    const selectedValue = d3.select(this).property("value");
+        handleDropdownChange(selectedValue);
+    });
+
+    function handleDropdownChange(value) {
+        originCountry = value;
+        console.log("Selected:", originCountry);
+        applyFilter();
+        drawVisualizations();
+    }
+}
+
+function destinationDropDown() {
+    const options = ["NONE"];
+
+    Object.keys(countryToIso).forEach(country => {
+        options.push(country);
+    });
+    
+
+    const dropdown = d3.select("#destination-drop-down");
+
+    dropdown.selectAll("option")
+    .data(options)
+    .enter()
+    .append("option")
+    .text(d => d)
+    .attr("value", d => d);
+
+    dropdown.on("change", function () {
+    const selectedValue = d3.select(this).property("value");
+        handleDropdownChange(selectedValue);
+    });
+
+    function handleDropdownChange(value) {
+        destinationCountry = value;
+        console.log("Selected:", destinationCountry);
+        applyFilter();
+        drawVisualizations();
+    }
+}
+
+function applyFilter() {
 
     const parseYear = d3.timeParse("%Y");
-    const startDate = parseYear(start_year.toString());
-    const endDate = parseYear(end_year.toString());
+    const startDate = parseYear(startYear.toString());
+    const endDate = parseYear(endYear.toString());
     filtered_data = global_data.slice();
 
     //TODO: Filter should be optional on the provision of origin/destination
 
     // For map, bar, sankey
+    console.log(originCountry);
+    console.log(destinationCountry);
+
     filtered_data[0] = filtered_data[0].filter(d => {
         const yearDate = parseYear(d.year);
-        return (d.origin === origin_country && yearDate >= startDate && yearDate <= endDate);
+        if (originCountry === "NONE" && destinationCountry === "NONE") {
+            return false;
+        } else if (destinationCountry === "NONE"){
+            return (d.origin === originCountry && yearDate >= startDate && yearDate <= endDate);
+        } else if (originCountry === "NONE"){
+            return (d.destination === destinationCountry && yearDate >= startDate && yearDate <= endDate);
+        }
+        else {
+            return (d.origin === originCountry && d.destination === destinationCountry && yearDate >= startDate && yearDate <= endDate);
+        }
     });
+    console.log(filtered_data[0]);
+    console.log(global_data[0]);
 }
 
 function drawFlowMap() {
@@ -190,7 +274,7 @@ function drawSankeyDiagram() {
         }
         linkMap.get(key2).value += d.migrantCount;
     });
-    console.log(linkMap);
+    // console.log(linkMap);
     const links = Array.from(linkMap.values());
 
     d3.select("#sankey").select("svg").remove();
@@ -311,7 +395,7 @@ function drawBarChart() {
         .attr("width", width)
         .attr("height", scrollableHeight);
     
-    console.log("Max migrant: ", d3.max(sorteddata, d => d.migrantCount));
+    // console.log("Max migrant: ", d3.max(sorteddata, d => d.migrantCount));
     const x = d3.scaleLinear()
         .domain([0, d3.max(sorteddata, d => d.migrantCount)])
         .nice()
@@ -358,30 +442,4 @@ function drawBarChart() {
         .selectAll("text")
         .style("font-size", "10px");
 
-}
-
-// Sample data for dropdown
-const options = ["Apple", "Banana", "Cherry", "Date"];
-
-// Select the dropdown element
-const dropdown = d3.select("#origin-drop-down");
-
-// Populate the dropdown options
-dropdown.selectAll("option")
-  .data(options)
-  .enter()
-  .append("option")
-  .text(d => d)
-  .attr("value", d => d);
-
-// Event handler for when the dropdown value changes
-dropdown.on("change", function () {
-  const selectedValue = d3.select(this).property("value");
-  handleDropdownChange(selectedValue);
-});
-
-// Function to handle dropdown changes
-function handleDropdownChange(value) {
-  console.log("Selected:", value);
-  // You can do anything here with the selected value
 }
