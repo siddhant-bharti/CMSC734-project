@@ -52,7 +52,7 @@ var destinationCountry = "NONE";  // store origin
 // some mapping
 var countryToIso;
 var isoToCountry;
-var asylumToRegion = {};
+var asylumToRegion = new Map();
 
 Promise.all([
     d3.csv('./datasets/dataset_denormalized_enriched_pruned.csv', function(row) {
@@ -72,9 +72,7 @@ Promise.all([
     isoToCountry = mappings.isoToCountry;
 
     global_data[0].forEach(row => {
-        if(row.destination) {
-            asylumToRegion[row.destination] = row.destinationRegion;
-        }
+        asylumToRegion.set(row.destination, row.destinationRegion); 
     });
 
     applyFilter();
@@ -185,10 +183,6 @@ function applyFilter() {
 
     //TODO: Filter should be optional on the provision of origin/destination
 
-    // For map, bar, sankey
-    console.log(originCountry);
-    console.log(destinationCountry);
-
     filtered_data[0] = filtered_data[0].filter(d => {
         const yearDate = parseYear(d.year);
         if (originCountry === "NONE" && destinationCountry === "NONE") {
@@ -202,8 +196,6 @@ function applyFilter() {
             return (d.origin === originCountry && d.destination === destinationCountry && yearDate >= startDate && yearDate <= endDate);
         }
     });
-    console.log(filtered_data[0]);
-    console.log(global_data[0]);
 }
 
 function drawFlowMap() {
@@ -258,27 +250,61 @@ function updateLayers() {
 function drawSankeyDiagram() {
     const rawData = filtered_data[0];
     const nodeNames = Array.from(
-        new Set(rawData.flatMap(d => [d.origin, d.destinationRegion, d.destination]))
+        new Set(rawData.flatMap(d => {
+            const entries = [d.origin, d.destination];
+            if (destinationCountry === "NONE") {
+                entries.push(d.destinationRegion);
+            } else if (originCountry === "NONE" && asylumToRegion.has(d.origin)) {
+                entries.push(asylumToRegion.get(d.origin));
+            } 
+            return entries;
+        }))
     );
     const nodes = nodeNames.map((name, index) => ({ name, index }));
     const nodeIndexMap = new Map(nodes.map(n => [n.name, n.index]));
     const linkMap = new Map();
-    rawData.forEach(d => {
-        const originIdx = nodeIndexMap.get(d.origin);
-        const regionIdx = nodeIndexMap.get(d.destinationRegion);
-        const destIdx = nodeIndexMap.get(d.destination);
-        const key1 = `${originIdx}->${regionIdx}`;
-        const key2 = `${regionIdx}->${destIdx}`;
-        if (!linkMap.has(key1)) {
-            linkMap.set(key1, { source: originIdx, target: regionIdx, value: 0 });
-        }
-        linkMap.get(key1).value += d.migrantCount;
-        if (!linkMap.has(key2)) {
-            linkMap.set(key2, { source: regionIdx, target: destIdx, value: 0 });
-        }
-        linkMap.get(key2).value += d.migrantCount;
-    });
-    // console.log(linkMap);
+    if (destinationCountry === "NONE") {
+        rawData.forEach(d => {
+            const originIdx = nodeIndexMap.get(d.origin);
+            const regionIdx = nodeIndexMap.get(d.destinationRegion);
+            const destIdx = nodeIndexMap.get(d.destination);
+            const key1 = `${originIdx}->${regionIdx}`;
+            const key2 = `${regionIdx}->${destIdx}`;
+            if (!linkMap.has(key1)) {
+                linkMap.set(key1, { source: originIdx, target: regionIdx, value: 0 });
+            }
+            linkMap.get(key1).value += d.migrantCount;
+            if (!linkMap.has(key2)) {
+                linkMap.set(key2, { source: regionIdx, target: destIdx, value: 0 });
+            }
+            linkMap.get(key2).value += d.migrantCount;
+        });
+    } else if (originCountry === "NONE") {
+        rawData.forEach(d => {
+            const originIdx = nodeIndexMap.get(d.origin);
+            if (asylumToRegion.has(d.origin)) {
+                const regionIdx = nodeIndexMap.get(asylumToRegion.get(d.origin));
+                const destIdx = nodeIndexMap.get(d.destination);
+                const key1 = `${originIdx}->${regionIdx}`;
+                const key2 = `${regionIdx}->${destIdx}`;
+                if (!linkMap.has(key1)) {
+                    linkMap.set(key1, { source: originIdx, target: regionIdx, value: 0 });
+                }
+                linkMap.get(key1).value += d.migrantCount;
+                if (!linkMap.has(key2)) {
+                    linkMap.set(key2, { source: regionIdx, target: destIdx, value: 0 });
+                }
+                linkMap.get(key2).value += d.migrantCount;
+            } else {
+                const destIdx = nodeIndexMap.get(d.destination);
+                const key = `${originIdx}->${destIdx}`;
+                if (!linkMap.has(key)) {
+                    linkMap.set(key, { source: originIdx, target: destIdx, value: 0 });
+                }
+                linkMap.get(key).value += d.migrantCount;
+            }
+        });
+    }
     const links = Array.from(linkMap.values());
 
     d3.select("#sankey").select("svg").remove();
@@ -398,8 +424,7 @@ function drawBarChart() {
         .append("svg")
         .attr("width", width)
         .attr("height", scrollableHeight);
-    
-    // console.log("Max migrant: ", d3.max(sorteddata, d => d.migrantCount));
+
     const x = d3.scaleLinear()
         .domain([0, d3.max(sorteddata, d => d.migrantCount)])
         .nice()
