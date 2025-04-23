@@ -8,11 +8,17 @@ var activeMapType = 'nodes_links';
 var nodeFeatures = [];
 
 var myMap = L.map('map').setView([0, 0], 2);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-{
-    maxZoom: 10,
-    minZoom: 3,
-    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>'
+// L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+// {
+//     maxZoom: 10,
+//     minZoom: 3,
+//     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>'
+// }).addTo(myMap);
+L.tileLayer('https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}{r}.{ext}', {
+	minZoom: 0,
+	maxZoom: 20,
+	attribution: '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+	ext: 'png'
 }).addTo(myMap);
 
 var svgLayer = L.svg();
@@ -82,25 +88,36 @@ Promise.all([
     drawVisualizations();
 });
 
+function doDrawSankey() {
+    if (originCountry === "NONE" && destinationCountry === "NONE") {
+        return false;
+    } else if (originCountry !== "NONE" && destinationCountry !== "NONE") {
+        return false;
+    }
+    return true;
+}
+
 function drawVisualizations() {
     drawFlowMap();
     drawBarChart();
-    drawSankeyDiagram();
+    if (doDrawSankey()) {
+        // console.log("Draw Sankey")
+        drawSankeyDiagram();
+    }
 }
 
 function drawSlider() {
-    var links = filtered_data[0];
-
-    // Define the slider
+    var slider_min_year = new Date(minYear, 0, 1);
+    var slider_max_year = new Date(maxYear, 0, 1);
     var sliderRange = d3
     .sliderBottom()
-    .min(new Date(minYear, 0, 1))
-    .max(new Date(maxYear, 0, 1))
+    .min(slider_min_year)
+    .max(slider_max_year)
     .width(300)
     .tickFormat(d3.timeFormat('%Y'))
-    .ticks(3)
-    .default([new Date(minYear, 0, 1), new Date(maxYear, 0, 1)])
-    .fill('#85bb65');
+    .ticks(8)
+    .default([slider_min_year, slider_max_year])
+    .fill('blue');
 
     sliderRange.on('onchange', val => {
         const startDate = new Date(val[0]);
@@ -112,7 +129,7 @@ function drawSlider() {
         drawVisualizations();
     });
     
-    const gRange =d3.select('#slider-g');
+    const gRange =d3.select('#slider-range');
     
     gRange.call(sliderRange);
     
@@ -183,6 +200,7 @@ function applyFilter() {
 
     //TODO: Filter should be optional on the provision of origin/destination
 
+    // For map, bar, sankey
     filtered_data[0] = filtered_data[0].filter(d => {
         const yearDate = parseYear(d.year);
         if (originCountry === "NONE" && destinationCountry === "NONE") {
