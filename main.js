@@ -46,6 +46,7 @@ let randomOffset = Math.random() * 100 - 50;
 // Global variable for the data
 var global_data;
 var filtered_data;
+var sankey_filtered_data;
 
 // Years
 var maxYear;  // stores max year of the dataset
@@ -69,6 +70,7 @@ Promise.all([
 ]).then(function(data) {
     global_data = data;
     filtered_data = data;
+    sankey_filtered_data = data;
     maxYear = d3.max(data[0], d => d.year);
     minYear = d3.min(data[0], d => d.year);
     startYear = minYear;
@@ -94,6 +96,10 @@ function doDrawSankey() {
     } else if (originCountry !== "NONE" && destinationCountry !== "NONE") {
         return false;
     }
+    return true;
+}
+
+function doDrawRegions() {
     return true;
 }
 
@@ -194,14 +200,28 @@ function applyFilter() {
     const startDate = parseYear(startYear.toString());
     const endDate = parseYear(endYear.toString());
     filtered_data = global_data.slice();
+    sankey_filtered_data = global_data.slice();
 
     //TODO: Filter should be optional on the provision of origin/destination
 
-    // For map, bar, sankey
+    // For map, bar
     filtered_data[0] = filtered_data[0].filter(d => {
         const yearDate = parseYear(d.year);
         if (originCountry === "NONE" && destinationCountry === "NONE") {
             return false;
+        } else if (destinationCountry === "NONE"){
+            return (d.origin === originCountry && yearDate >= startDate && yearDate <= endDate);
+        } else if (originCountry === "NONE"){
+            return (d.destination === destinationCountry && yearDate >= startDate && yearDate <= endDate);
+        } else {
+            return (d.origin === originCountry && d.destination === destinationCountry && yearDate >= startDate && yearDate <= endDate);
+        }
+    });
+    //For sankey
+    sankey_filtered_data[0] = sankey_filtered_data[0].filter(d => {
+        const yearDate = parseYear(d.year);
+        if (originCountry === "NONE" && destinationCountry === "NONE") {
+            return true;
         } else if (destinationCountry === "NONE"){
             return (d.origin === originCountry && yearDate >= startDate && yearDate <= endDate);
         } else if (originCountry === "NONE"){
@@ -262,42 +282,46 @@ function updateLayers() {
 }
 
 function drawSankeyDiagram() {
-    const rawData = filtered_data[0];
+    const rawData = sankey_filtered_data[0];
     const nodeNames = Array.from(
         new Set(rawData.flatMap(d => {
-            const entries = [d.origin, d.destination];
-            if (destinationCountry === "NONE") {
-                entries.push(d.destinationRegion);
-            } else if (originCountry === "NONE" && asylumToRegion.has(d.origin)) {
-                entries.push(asylumToRegion.get(d.origin));
-            } 
-            return entries;
+            if (doDrawRegions){
+                const entries = [d.destinationRegion + "_d"];
+                if (asylumToRegion.has(d.origin)) {
+                    entries.push(asylumToRegion.get(d.origin) + "_o");
+                }
+                return entries;
+            } else {
+                const entries = [d.origin, d.destination];
+                if (destinationCountry === "NONE") {
+                    entries.push(d.destinationRegion);
+                } else if (originCountry === "NONE" && asylumToRegion.has(d.origin)) {
+                    entries.push(asylumToRegion.get(d.origin));
+                } 
+                return entries;
+            }
         }))
     );
     const nodes = nodeNames.map((name, index) => ({ name, index }));
     const nodeIndexMap = new Map(nodes.map(n => [n.name, n.index]));
     const linkMap = new Map();
-    if (destinationCountry === "NONE") {
+    if (doDrawRegions) {
         rawData.forEach(d => {
-            const originIdx = nodeIndexMap.get(d.origin);
-            const regionIdx = nodeIndexMap.get(d.destinationRegion);
-            const destIdx = nodeIndexMap.get(d.destination);
-            const key1 = `${originIdx}->${regionIdx}`;
-            const key2 = `${regionIdx}->${destIdx}`;
-            if (!linkMap.has(key1)) {
-                linkMap.set(key1, { source: originIdx, target: regionIdx, value: 0 });
-            }
-            linkMap.get(key1).value += d.migrantCount;
-            if (!linkMap.has(key2)) {
-                linkMap.set(key2, { source: regionIdx, target: destIdx, value: 0 });
-            }
-            linkMap.get(key2).value += d.migrantCount;
-        });
-    } else if (originCountry === "NONE") {
-        rawData.forEach(d => {
-            const originIdx = nodeIndexMap.get(d.origin);
             if (asylumToRegion.has(d.origin)) {
-                const regionIdx = nodeIndexMap.get(asylumToRegion.get(d.origin));
+                const originRegionIdx = nodeIndexMap.get(asylumToRegion.get(d.origin) + "_o");
+                const destinationRegionIdx = nodeIndexMap.get(d.destinationRegion + "_d");
+                const key = `${originRegionIdx}->${destinationRegionIdx}`;
+                if (!linkMap.has(key)) {
+                    linkMap.set(key, { source: originRegionIdx, target: destinationRegionIdx, value: 0 });
+                }
+                linkMap.get(key).value += d.migrantCount;
+            }
+        });
+    } else {
+        if (destinationCountry === "NONE") {
+            rawData.forEach(d => {
+                const originIdx = nodeIndexMap.get(d.origin);
+                const regionIdx = nodeIndexMap.get(d.destinationRegion);
                 const destIdx = nodeIndexMap.get(d.destination);
                 const key1 = `${originIdx}->${regionIdx}`;
                 const key2 = `${regionIdx}->${destIdx}`;
@@ -309,21 +333,39 @@ function drawSankeyDiagram() {
                     linkMap.set(key2, { source: regionIdx, target: destIdx, value: 0 });
                 }
                 linkMap.get(key2).value += d.migrantCount;
-            } else {
-                const destIdx = nodeIndexMap.get(d.destination);
-                const key = `${originIdx}->${destIdx}`;
-                if (!linkMap.has(key)) {
-                    linkMap.set(key, { source: originIdx, target: destIdx, value: 0 });
+            });
+        } else if (originCountry === "NONE") {
+            rawData.forEach(d => {
+                const originIdx = nodeIndexMap.get(d.origin);
+                if (asylumToRegion.has(d.origin)) {
+                    const regionIdx = nodeIndexMap.get(asylumToRegion.get(d.origin));
+                    const destIdx = nodeIndexMap.get(d.destination);
+                    const key1 = `${originIdx}->${regionIdx}`;
+                    const key2 = `${regionIdx}->${destIdx}`;
+                    if (!linkMap.has(key1)) {
+                        linkMap.set(key1, { source: originIdx, target: regionIdx, value: 0 });
+                    }
+                    linkMap.get(key1).value += d.migrantCount;
+                    if (!linkMap.has(key2)) {
+                        linkMap.set(key2, { source: regionIdx, target: destIdx, value: 0 });
+                    }
+                    linkMap.get(key2).value += d.migrantCount;
+                } else {
+                    const destIdx = nodeIndexMap.get(d.destination);
+                    const key = `${originIdx}->${destIdx}`;
+                    if (!linkMap.has(key)) {
+                        linkMap.set(key, { source: originIdx, target: destIdx, value: 0 });
+                    }
+                    linkMap.get(key).value += d.migrantCount;
                 }
-                linkMap.get(key).value += d.migrantCount;
-            }
-        });
+            });
+        }
     }
     const links = Array.from(linkMap.values());
 
     d3.select("#sankey").select("svg").remove();
 
-    if (doDrawSankey){
+    if (doDrawSankey || doDrawRegions){
         var color = d3.scaleOrdinal(d3.schemeCategory10);
 
         var margin = {top: 10, right: 10, bottom: 10, left: 10},
@@ -383,7 +425,13 @@ function drawSankeyDiagram() {
         .attr("dy", ".35em")
         .attr("text-anchor", "end")
         .attr("transform", null)
-        .text(function(d) { return d.name; })
+        .text(function(d) { 
+            if(doDrawRegions){
+                return d.name.slice(0,-2);
+            }else{
+                return d.name;
+            }
+        })
         .filter(function(d) { return d.x < width / 2; })
         .attr("x", 6 + sankey.nodeWidth())
         .attr("text-anchor", "start");
