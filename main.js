@@ -466,12 +466,24 @@ function drawBarChart() {
 
     const totalsByDestination = {};
 
-    links.forEach(d => {
-        if (!totalsByDestination[d.destination]) {
-            totalsByDestination[d.destination] = { migrantCount: 0, AsylumISO: d.AsylumISO };
-        }
-        totalsByDestination[d.destination].migrantCount += d.migrantCount;
-    });
+    if (originCountry !== "NONE") {
+        console.log("origin");
+        links.forEach(d => {
+            if (!totalsByDestination[d.destination]) {
+                totalsByDestination[d.destination] = { migrantCount: 0, AsylumISO: d.AsylumISO };
+            }
+            totalsByDestination[d.destination].migrantCount += d.migrantCount;
+        });
+    } else {
+        console.log("else");
+        links.forEach(d => {
+            if (!totalsByDestination[d.origin]) {
+                totalsByDestination[d.origin] = { migrantCount: 0, AsylumISO: d.OriginISO };
+            }
+            totalsByDestination[d.origin].migrantCount += d.migrantCount;
+        });
+    }
+    
     
     // Now map into a clean array
     const data = Object.entries(totalsByDestination).map(([destination, info]) => ({
