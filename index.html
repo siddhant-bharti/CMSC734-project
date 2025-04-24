@@ -10,13 +10,16 @@
 </head>
 <body>
     <div id="controls-container" style="display: flex; align-items: center;">
-        <div id="slider-range-container">
+        <div id="slider-range-container" style="display: flex; flex-direction: row; align-items: center;">
+            <label for="slider-svg" style="margin: 10px;">Years Considered</label>
             <svg id="slider-svg" width="500" height="100" style="margin: 40px;">
-                <g id="slider-range" transform="translate(90,30)"></g>
+                <g id="slider-range" transform="translate(50,30)"></g>
             </svg>
         </div>
         <div>
+            <label for="origin-drop-down">Origin Country:</label>
             <select id="origin-drop-down"></select>
+            <label for="destination-drop-down">Destination Country:</label>
             <select id="destination-drop-down"></select>
         </div>
     </div>
