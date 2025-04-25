@@ -54,7 +54,9 @@ var minYear;  // stores mins year of the dataset
 var startYear;  // store start year for the filter
 var endYear;  // store end year for the filter
 var originCountry = "NONE";  // store origin
+var originCountryLayer;
 var destinationCountry = "NONE";  // store origin
+var destinationCountryLayer;
 
 // some mapping
 var countryToIso;
@@ -536,3 +538,127 @@ function drawBarChart() {
         .style("font-size", "10px");
 
 }
+
+// Country selection logic is inspired from
+// https://medium.com/@limeira.felipe94/highlighting-countries-on-a-map-with-leaflet-f84b7efee0a9
+
+function style(feature) {
+    return {
+        fillColor: 'gray',
+        weight: 1,
+        opacity: 1,
+        color: 'black',
+        fillOpacity: 0.0
+    };
+}
+
+
+function highlightFeature(e) {
+    var layer = e.target;
+    layer.setStyle({
+        weight: 5,
+        color: 'red',
+        fillColor: 'red',
+        dashArray: '',
+        fillOpacity: 0.5
+    });
+    if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+        layer.bringToFront();
+    }
+}
+
+function resetHighlight(e) {
+    var layer = e.target;
+    try {
+        if (layer !== originCountryLayer && layer !== destinationCountryLayer) {
+            geojson.resetStyle(layer);
+        }
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+function highlightFeatureFixed(layer) {
+    layer.setStyle({
+        weight: 5,
+        color: 'red',
+        fillColor: 'red',
+        dashArray: '',
+        fillOpacity: 0.5
+    });
+    if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+        layer.bringToFront();
+    }
+}
+
+function resetHighlightFixed(layer) {
+    try {
+        geojson.resetStyle(layer);
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+function zoomToFeature(e) {
+    const layer = e.target;
+
+    // console.log('Clicked country:', countryName);
+    // console.log(isoToCountry, layer.feature.id, isoToCountry[layer.feature.id]);
+
+    // If data is not available for this country exit
+    if (!(layer.feature.id in isoToCountry)) {
+        alert("Data not found for " + layer.feature.properties.name);
+        return;
+    }
+    
+    if (originCountry === "NONE" && destinationCountry === "NONE") {
+        originCountry = isoToCountry[layer.feature.id];
+        originCountryLayer = layer;
+    } else if (destinationCountry === "NONE") {
+        destinationCountry = isoToCountry[layer.feature.id];
+        destinationCountryLayer = layer;
+    } else {
+        originCountry = "NONE";
+        destinationCountry = "NONE";
+    }
+    console.log(originCountry, destinationCountry);
+
+    if (originCountry !== "NONE") {
+        highlightFeatureFixed(originCountryLayer);
+    } else {
+        resetHighlightFixed(originCountryLayer);
+    }
+
+    if (destinationCountry !== "NONE") {
+        highlightFeatureFixed(destinationCountryLayer);
+    } else {
+        resetHighlightFixed(destinationCountryLayer);
+    }
+
+    applyFilter();
+    drawVisualizations();
+}
+
+
+// Define events for each feature (country)
+function onEachFeature(feature, layer) {
+    layer.on({
+        mouseover: highlightFeature,
+        mouseout: resetHighlight,
+        click: zoomToFeature
+    });
+}
+
+// Add GeoJSON data to the main map
+let geojson;
+fetch('countries.geo.json')
+.then(response => response.json())
+.then(data => {
+    geojson = L.geoJson(data, {
+        style: style,
+        onEachFeature: onEachFeature
+    }).addTo(myMap);
+})
+.catch(error => {
+    console.error('Error loading GeoJSON on the Main Map:', error);
+});
