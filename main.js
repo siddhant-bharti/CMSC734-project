@@ -8,18 +8,18 @@ var activeMapType = 'nodes_links';
 var nodeFeatures = [];
 
 var myMap = L.map('map').setView([0, 0], 2);
-// L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-// {
-//     maxZoom: 10,
-//     minZoom: 3,
-//     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>'
-// }).addTo(myMap);
-L.tileLayer('https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}{r}.{ext}', {
-	minZoom: 2,
-	maxZoom: 10,
-	attribution: '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-	ext: 'png'
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+{
+    maxZoom: 10,
+    minZoom: 3,
+    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>'
 }).addTo(myMap);
+// L.tileLayer('https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}{r}.{ext}', {
+// 	minZoom: 2,
+// 	maxZoom: 10,
+// 	attribution: '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+// 	ext: 'png'
+// }).addTo(myMap);
 
 var svgLayer = L.svg();
 svgLayer.addTo(myMap)
@@ -85,6 +85,7 @@ Promise.all([
 
     applyFilter();
     drawSlider();
+    addPlayButton();
     originDropDown();
     destinationDropDown();
     drawVisualizations();
@@ -113,14 +114,14 @@ function drawSlider() {
     var slider_min_year = new Date(minYear, 0, 1);
     var slider_max_year = new Date(maxYear, 0, 1);
     var sliderRange = d3
-    .sliderBottom()
-    .min(slider_min_year)
-    .max(slider_max_year)
-    .width(300)
-    .tickFormat(d3.timeFormat('%Y'))
-    .ticks(8)
-    .default([slider_min_year, slider_max_year])
-    .fill('blue');
+        .sliderBottom()
+        .min(slider_min_year)
+        .max(slider_max_year)
+        .width(300)
+        .tickFormat(d3.timeFormat('%Y'))
+        .ticks(8)
+        .default([slider_min_year, slider_max_year])
+        .fill('blue');
 
     sliderRange.on('onchange', val => {
         const startDate = new Date(val[0]);
@@ -135,7 +136,7 @@ function drawSlider() {
     const gRange =d3.select('#slider-range');
     
     gRange.call(sliderRange);
-    
+
 }
 
 function originDropDown() {
@@ -450,20 +451,23 @@ function drawSankeyDiagram() {
     }
 }
 
+function stringToColor(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue = Math.abs(hash) % 360;
+    const saturation = 70 + (Math.abs(hash) % 20);
+    const lightness = 50 + (Math.abs(hash) % 10);
+    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+}
+
 function drawBarChart() {
     var links = filtered_data[0];
     const width = 600;
     const height = 600;
     const margin = { top: 30, right: 30, bottom: 50, left: 50 };
     const barHeight = 25;
-
-    d3.select("#bar").select("svg").remove();
-
-    // const svg = d3.select("#bar")
-    //     .append("svg")
-    //     .attr("width", width)
-    //     .attr("height", height);
-
     const totalsByDestination = {};
 
     if (originCountry !== "NONE") {
@@ -496,10 +500,15 @@ function drawBarChart() {
     
     const scrollableHeight = sorteddata.length * barHeight + margin.top + margin.bottom;
 
-    const svg = d3.select("#bar")
-        .append("svg")
-        .attr("width", width)
-        .attr("height", scrollableHeight);
+    // More Dynamic.
+    let svg = d3.select("#bar").select("svg");
+    if (svg.empty()) {
+        svg = d3.select("#bar")
+            .append("svg")
+            .attr("width", width);
+    }
+    svg.attr("height", scrollableHeight);
+
 
     const x = d3.scaleLinear()
         .domain([0, d3.max(sorteddata, d => d.migrantCount)])
@@ -515,36 +524,150 @@ function drawBarChart() {
         .domain(sorteddata.map(d => d.destination))
         .range([margin.left, width - margin.right])
         .padding(0.1);
-
     
-    svg.append("g")
-        .attr("fill", "steelblue")
-        .selectAll("rect")
-        .data(sorteddata)
-        .enter()
+    const bars = svg.selectAll("rect").data(sorteddata, d => d.destination);
+
+    // ENTER
+    const barsEnter = bars.enter()
         .append("rect")
         .attr("x", 50)
         .attr("y", (d, i) => margin.top + i * barHeight)
-        .attr("height", barHeight-1)
-        .attr("width", d => x(d.migrantCount)-x(0));
+        .attr("height", barHeight - 1)
+        .attr("width", 0)
+        .attr("fill", d => stringToColor(d.AsylumISO))
+        .transition()
+        .duration(500)
+        .attr("width", d => x(d.migrantCount) - x(0));
     
+    // UPDATE
+    bars.transition()
+        .duration(500)
+        .attr("y", (d, i) => margin.top + i * barHeight)
+        .attr("width", d => x(d.migrantCount) - x(0));
     
-    svg.append("g")
-        .selectAll("text")
-        .data(sorteddata)
-        .enter()
-        .append("text")
-        .attr("x", 45)  // slightly left of the bar start (x = 50)
-        .attr("y", (d, i) => margin.top + i * barHeight + (barHeight / 2))
-        .attr("dy", "0.35em")  // vertical centering
-        .attr("text-anchor", "end")
-        .text(d => d.AsylumISO)
-        .style("font-size", "10px");
+    // EXIT
+    bars.exit()
+        .transition()
+        .duration(300)
+        .attr("width", 0)
+        .remove();
     
-    svg.append("g")
-        .attr("transform", `translate(0, ${margin.top - 5})`)  // place just above bars
-        .call(d3.axisTop(xlabel).ticks(5))
-        .selectAll("text")
-        .style("font-size", "10px");
+    // Bind data for labels
+    const labels = svg.selectAll("text.bar-label")
+        .data(sorteddata, d => d.destination);
 
+    // ENTER
+    labels.enter()
+        .append("text")
+        .attr("class", "bar-label")
+        .attr("x", 45)
+        .attr("y", (d, i) => margin.top + i * barHeight + (barHeight / 2))
+        .attr("dy", "0.35em")
+        .attr("text-anchor", "end")
+        .style("font-size", "10px")
+        .style("opacity", 0)
+        .text(d => d.AsylumISO)
+        .transition()
+        .duration(500)
+        .style("opacity", 1);
+
+    // UPDATE
+    labels.transition()
+        .duration(500)
+        .attr("y", (d, i) => margin.top + i * barHeight + (barHeight / 2))
+        .text(d => d.AsylumISO);
+
+    // EXIT
+    labels.exit()
+        .transition()
+        .duration(300)
+        .style("opacity", 0)
+        .remove();
+
+    // Select the existing axis or append it if missing
+    let xAxisGroup = svg.select("g.x-axis");
+
+    if (xAxisGroup.empty()) {
+        // First time: create the axis group
+        xAxisGroup = svg.append("g")
+            .attr("class", "x-axis")
+            .attr("transform", `translate(0, ${margin.top - 5})`)
+            .call(d3.axisTop(xlabel).ticks(5))
+            .selectAll("text")
+            .style("font-size", "10px");
+    } else {
+        // Update: transition the axis
+        xAxisGroup.transition()
+            .duration(500)
+            .call(d3.axisTop(xlabel).ticks(5));
+
+        // Optional: update label style
+        xAxisGroup.selectAll("text")
+            .style("font-size", "10px");
+    }
+}
+
+var originalMinYear;
+var originalMaxYear;
+function addPlayButton() {
+    const parentContainer = d3.select("#slider-range-container");
+    parentContainer.select("#play-button").remove(); // prevent duplicates
+
+    let isPlaying = false;
+    let shouldStop = false;
+    let originalMinYear, originalMaxYear;
+
+    parentContainer.append("button")
+        .attr("id", "play-button")
+        .style("margin-left", "20px")
+        .style("height", "30px")
+        .text("Play Year-by-Year")
+        .on("click", async function () {
+            const button = d3.select(this);
+
+            if (!isPlaying) {
+                // Start playback
+                originalMinYear = startYear;
+                originalMaxYear = endYear;
+                isPlaying = true;
+                shouldStop = false;
+                button.text("Stop");
+
+                for (let i = originalMinYear; i <= originalMaxYear; i++) {
+                    if (shouldStop) break;
+
+                    startYear = i;
+                    endYear = i + 1;
+                    console.log("Year: " + i);
+                    applyFilter();
+                    originDropDown();
+                    destinationDropDown();
+                    drawVisualizations();
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+
+                if (!shouldStop) {
+                    // Auto reset after finish
+                    startYear = originalMinYear;
+                    endYear = originalMaxYear;
+                    applyFilter();
+                    originDropDown();
+                    destinationDropDown();
+                    drawVisualizations();
+                    button.text("Play Year-by-Year");
+                    isPlaying = false;
+                }
+            } else {
+                // Stop and reset
+                shouldStop = true;
+                startYear = originalMinYear;
+                endYear = originalMaxYear;
+                applyFilter();
+                originDropDown();
+                destinationDropDown();
+                drawVisualizations();
+                button.text("Play Year-by-Year");
+                isPlaying = false;
+            }
+        });
 }
