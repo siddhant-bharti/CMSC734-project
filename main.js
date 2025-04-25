@@ -169,6 +169,12 @@ function originDropDown() {
     }
 }
 
+function setOriginDropDown(value) {
+    d3.select("#origin-drop-down")
+    .property("value", value)
+    .dispatch("change");
+}
+
 function destinationDropDown() {
     const options = ["NONE"];
 
@@ -195,6 +201,12 @@ function destinationDropDown() {
         applyFilter();
         drawVisualizations();
     }
+}
+
+function setDestinationDropDown(value) {
+    d3.select("#destination-drop-down")
+    .property("value", value)
+    .dispatch("change");
 }
 
 function applyFilter() {
@@ -684,12 +696,16 @@ function zoomToFeature(e) {
     if (originCountry === "NONE" && destinationCountry === "NONE") {
         originCountry = isoToCountry[layer.feature.id];
         originCountryLayer = layer;
+        setOriginDropDown(originCountry);
     } else if (destinationCountry === "NONE") {
         destinationCountry = isoToCountry[layer.feature.id];
         destinationCountryLayer = layer;
+        setOriginDropDown(originCountry);
+        setDestinationDropDown(destinationCountry);
     } else {
         originCountry = "NONE";
         destinationCountry = "NONE";
+        setDestinationDropDown(destinationCountry);
     }
     console.log(originCountry, destinationCountry);
 
