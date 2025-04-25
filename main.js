@@ -8,18 +8,18 @@ var activeMapType = 'nodes_links';
 var nodeFeatures = [];
 
 var myMap = L.map('map').setView([0, 0], 2);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-{
-    maxZoom: 10,
-    minZoom: 3,
-    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>'
-}).addTo(myMap);
-// L.tileLayer('https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}{r}.{ext}', {
-// 	minZoom: 2,
-// 	maxZoom: 10,
-// 	attribution: '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-// 	ext: 'png'
+// L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+// {
+//     maxZoom: 10,
+//     minZoom: 3,
+//     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>'
 // }).addTo(myMap);
+L.tileLayer('https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}{r}.{ext}', {
+	minZoom: 2,
+	maxZoom: 10,
+	attribution: '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+	ext: 'png'
+}).addTo(myMap);
 
 var svgLayer = L.svg();
 svgLayer.addTo(myMap)
