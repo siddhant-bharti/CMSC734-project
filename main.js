@@ -89,6 +89,7 @@ Promise.all([
     drawSlider();
     addPlayButton();
     originDropDown();
+    originCheckBox();
     destinationDropDown();
     drawVisualizations();
 });
@@ -813,4 +814,18 @@ function addPlayButton() {
                 isPlaying = false;
             }
         });
+}
+
+
+function originCheckBox() {
+    var checkbox = d3.select("#region-analysis");
+    checkbox.on("change", function () {
+        let isChecked = d3.select(this).property("checked");
+      
+        if (isChecked) {
+          console.log(`Checkbox is checked.`);
+        } else {
+          console.log(`Checkbox is unchecked.`);
+        }
+    });
 }

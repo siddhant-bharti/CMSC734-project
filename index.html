@@ -15,13 +15,15 @@
             <svg id="slider-svg" width="500" height="100" style="margin: 40px;">
                 <g id="slider-range" transform="translate(50,30)"></g>
             </svg>
-            <button id="play-button" style="height: 30px; margin-left: 20px;">Play Year-by-Year</button>
+            <button id="play-button" style="height: 50px; margin-left: 10px;">Play Year-by-Year</button>
         </div>
-        <div>
+        <div id="other-selection" style="display: flex; flex-direction: row; align-items: center;">
             <label for="origin-drop-down">Origin Country:</label>
             <select id="origin-drop-down"></select>
             <label for="destination-drop-down">Destination Country:</label>
             <select id="destination-drop-down"></select>
+            <label for="accept"> Region Analysis </label>
+            <input type="checkbox" id="region-analysis" name="region-analysis">
         </div>
     </div>
     <div id="main">
