@@ -71,8 +71,8 @@ var regionCoordinates = {
     'Southern Africa': [-28.8166236, 24.991639], 
     'Asia and the Pacific': [14.440122, 120.5511622],
     'Middle East and North Africa': [33.8746648, 35.5667363],
-    'East and Horn of Africa, and Great Lakes': [],
-    'West and Central Africa': [57.719512, 11.94776],
+    'East and Horn of Africa, and Great Lakes': [57.719512, 11.94776],
+    'West and Central Africa': [14.6617324, -17.4372164],
     'Americas': [39.7837304, -100.445882]
 }
 
