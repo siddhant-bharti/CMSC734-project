@@ -64,6 +64,21 @@ var countryToIso;
 var isoToCountry;
 var asylumToRegion = new Map();
 
+
+// Coordinates for regions
+var regionCoordinates = {
+    'Europe': [51.0, 10.0], 
+    'Southern Africa': [-28.8166236, 24.991639], 
+    'Asia and the Pacific': [14.440122, 120.5511622],
+    'Middle East and North Africa': [33.8746648, 35.5667363],
+    'East and Horn of Africa, and Great Lakes': [],
+    'West and Central Africa': [57.719512, 11.94776],
+    'Americas': [39.7837304, -100.445882]
+}
+
+console.log(regionCoordinates);
+
+
 Promise.all([
     d3.csv('./datasets/dataset_denormalized_enriched_pruned.csv', function(row) {
         var link = {origin: row['originName'], originCoord: [+row['originLatitude'], +row['originLongitude']], destination: row['asylumName'], destinationCoord: [+row['asylumLatitude'], +row['asylumLongitude']], 
