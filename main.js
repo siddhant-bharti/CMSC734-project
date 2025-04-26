@@ -57,6 +57,7 @@ var originCountry = "NONE";  // store origin
 var originCountryLayer;
 var destinationCountry = "NONE";  // store origin
 var destinationCountryLayer;
+var showRegionPie = false;
 
 // some mapping
 var countryToIso;
@@ -111,6 +112,7 @@ function drawVisualizations() {
     drawFlowMap();
     drawBarChart();
     drawSankeyDiagram();
+    drawRegionPieChart();
 }
 
 function drawSlider() {
@@ -486,7 +488,6 @@ function drawBarChart() {
     const totalsByDestination = {};
 
     if (originCountry !== "NONE") {
-        console.log("origin");
         links.forEach(d => {
             if (!totalsByDestination[d.destination]) {
                 totalsByDestination[d.destination] = { migrantCount: 0, AsylumISO: d.AsylumISO };
@@ -494,7 +495,6 @@ function drawBarChart() {
             totalsByDestination[d.destination].migrantCount += d.migrantCount;
         });
     } else {
-        console.log("else");
         links.forEach(d => {
             if (!totalsByDestination[d.origin]) {
                 totalsByDestination[d.origin] = { migrantCount: 0, AsylumISO: d.OriginISO };
@@ -708,7 +708,7 @@ function zoomToFeature(e) {
         destinationCountry = "NONE";
         setDestinationDropDown(destinationCountry);
     }
-    console.log(originCountry, destinationCountry);
+    // console.log(originCountry, destinationCountry);
 
     if (originCountry !== "NONE") {
         highlightFeatureFixed(originCountryLayer);
@@ -823,9 +823,82 @@ function originCheckBox() {
         let isChecked = d3.select(this).property("checked");
       
         if (isChecked) {
-          console.log(`Checkbox is checked.`);
+            showRegionPie = true;
         } else {
-          console.log(`Checkbox is unchecked.`);
+            showRegionPie = false;
+        }
+        applyFilter();
+        drawVisualizations();
+    });
+}
+
+// Pic chart implementation is inspired from
+// https://medium.com/@aleksej.gudkov/creating-a-pie-chart-with-d3-js-a-complete-guide-b69fd35268ea
+
+function drawRegionPieChart() {
+    d3.select("#pie").select("svg").remove();
+
+    if (!showRegionPie || originCountry === "NONE") {
+        return;
+    }
+    var regionMigrantCount = new Map();
+
+    filtered_data[0].forEach(d => {
+        var region = asylumToRegion.get(d.destination);
+        if (regionMigrantCount.has(region)) {
+            regionMigrantCount.set(region, regionMigrantCount.get(region) + d.migrantCount);
+        } else {
+            regionMigrantCount.set(region, d.migrantCount);
         }
     });
+
+    const data = [];
+
+    for (const [key, value] of regionMigrantCount.entries()) {
+        data.push({region: key, migrantCount: value});
+      }
+
+    const width = 500;
+    const height = 500;
+    const radius = Math.min(width, height) / 2;
+    
+    const svg = d3.select('#pie')
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height)
+        .append('g')
+        .attr('transform', `translate(${width / 2}, ${height / 2})`);
+    
+    const color = d3.scaleOrdinal()
+        .domain(data.map(d => d.region))
+        .range(d3.schemeCategory10);
+    
+    const pie = d3.pie()
+        .value(d => d.migrantCount);
+    
+    const arc = d3.arc()
+        .innerRadius(0)
+        .outerRadius(radius);
+    
+    const slices = svg.selectAll('path')
+        .data(pie(data))
+        .enter()
+        .append('path')
+        .attr('d', arc)
+        .attr('fill', d => color(d.data.region))
+        .attr('stroke', 'white')
+        .style('stroke-width', '2px');
+    
+    svg.selectAll('text')
+        .data(pie(data))
+        .enter()
+        .append('text')
+        .attr('transform', d => {
+            var [x, y] = arc.centroid(d);
+            var offset = (Math.random() - 0.5) * 20
+            return `translate(${x + offset}, ${y + offset}) rotate(315)`;
+        })
+        .text(function(d) {return `${d.data.region}: ${d.data.migrantCount}`;})
+        .style('font-size', '12px')
+        .style('fill', 'black');
 }
