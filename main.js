@@ -128,7 +128,7 @@ function doDrawSankey() {
 }
 
 function doDrawRegions() {
-    return true;
+    return showRegionPie;
 }
 
 function drawVisualizations() {
@@ -333,7 +333,7 @@ function drawSankeyDiagram() {
     const rawData = sankey_filtered_data[0];
     const nodeNames = Array.from(
         new Set(rawData.flatMap(d => {
-            if (doDrawRegions){
+            if (doDrawRegions()){
                 const entries = [d.destinationRegion + "_d"];
                 if (asylumToRegion.has(d.origin)) {
                     entries.push(asylumToRegion.get(d.origin) + "_o");
@@ -353,7 +353,7 @@ function drawSankeyDiagram() {
     const nodes = nodeNames.map((name, index) => ({ name, index }));
     const nodeIndexMap = new Map(nodes.map(n => [n.name, n.index]));
     const linkMap = new Map();
-    if (doDrawRegions) {
+    if (doDrawRegions()) {
         rawData.forEach(d => {
             if (asylumToRegion.has(d.origin)) {
                 const originRegionIdx = nodeIndexMap.get(asylumToRegion.get(d.origin) + "_o");
@@ -413,7 +413,7 @@ function drawSankeyDiagram() {
 
     d3.select("#sankey").select("svg").remove();
 
-    if (doDrawSankey || doDrawRegions){
+    if (doDrawSankey() || doDrawRegions()){
         var color = d3.scaleOrdinal(d3.schemeCategory10);
 
         var margin = {top: 10, right: 10, bottom: 10, left: 10},
@@ -474,7 +474,7 @@ function drawSankeyDiagram() {
         .attr("text-anchor", "end")
         .attr("transform", null)
         .text(function(d) { 
-            if(doDrawRegions){
+            if(doDrawRegions()){
                 return d.name.slice(0,-2);
             }else{
                 return d.name;
