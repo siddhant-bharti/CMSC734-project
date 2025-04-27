@@ -745,8 +745,6 @@ function selectCountry(e) {
     } else {
         resetHighlightFixed(destinationCountryLayer);
     }
-    console.log(originCountry, destinationCountry);
-    console.log(originCountryLayer, destinationCountryLayer);
     applyFilter();
     drawVisualizations();
 }
