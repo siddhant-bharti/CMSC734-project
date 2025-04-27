@@ -75,6 +75,15 @@ var regionCoordinates = {
     'West and Central Africa': [14.6617324, -17.4372164],
     'Americas': [39.7837304, -100.445882]
 }
+var regionCoordinates2D = {
+    'Europe': [51.0, 20.0], 
+    'Southern Africa': [-28.8166236, 24.991639], 
+    'Asia and the Pacific': [14.440122, 120.5511622],
+    'Middle East and North Africa': [33.8746648, 35.5667363],
+    'East and Horn of Africa, and Great Lakes': [57.719512, 11.94776],
+    'West and Central Africa': [14.6617324, -17.4372164],
+    'Americas': [19.7837304, -100.445882]
+}
 
 
 
@@ -643,7 +652,7 @@ function drawBarChart() {
     }
 }
 
-// Country selection logic is inspired from
+// Country selection logic is inspired from (syntax)
 // https://medium.com/@limeira.felipe94/highlighting-countries-on-a-map-with-leaflet-f84b7efee0a9
 
 function style(feature) {
@@ -855,7 +864,7 @@ function originCheckBox() {
     });
 }
 
-// Pic chart implementation is inspired from
+// Pic chart implementation is inspired from (syntax)
 // https://medium.com/@aleksej.gudkov/creating-a-pie-chart-with-d3-js-a-complete-guide-b69fd35268ea
 
 function drawRegionPieChart() {
@@ -921,6 +930,9 @@ function drawRegionPieChart() {
             .innerRadius(0)
             .outerRadius(radius)
             .cornerRadius(4);
+        const labelArc = d3.arc()
+            .innerRadius(0)
+            .outerRadius(radius * 0.5);
 
         const slices = svg.selectAll('path')
             .data(pie(data))
@@ -936,14 +948,65 @@ function drawRegionPieChart() {
             .enter()
             .append('text')
             .attr('transform', d => {
-                var [x, y] = arc.centroid(d);
-                var offset = 0;//(Math.random() - 0.5) * 20
-                return `translate(${x + offset}, ${y + offset})`;
+                var [x, y] = labelArc.centroid(d);
+                return `translate(${x}, ${y})`;
             })
             .text(function(d) {return `${d.data.region}: ${d.data.migrantCount}`;})
             .style('font-size', '12px')
             .style('fill', 'black');
     }
     pieChart(data, "#region-pie");
-    pieChart(data1, "#pie");
+    // pieChart(data1, "#pie");
+
+    var width2 = 350;
+    var height2 = 300;
+    function projectTo2D(lat, lon) {
+        return [((lon + 180) / 360) * (width2 - 100), ((90 - lat) / 180) * height2];
+    }
+    var maxMC = d3.max(data1, d => d.migrantCount);
+    var minMC = d3.min(data1, d => d.migrantCount);
+
+    var rSectorScale = d3.scaleSqrt()
+    .domain([minMC, maxMC])
+    .range([10, 50]);
+
+    const svg = d3.select("#pie")
+    .append('svg')
+    .attr('width', width2)
+    .attr('height', height2);
+
+    const color = d3.scaleOrdinal()
+            .domain(data.map(d => d.region))
+            .range(d3.schemeCategory10);
+
+    var sectorG = svg.selectAll('.sector')
+        .data(data1)
+        .enter()
+        .append('g')
+        .attr('class', 'sector')
+        .attr('transform', function(d) {
+            var [lat, lon] = regionCoordinates2D[d.region];
+            var [x, y] = projectTo2D(lat, lon);
+            return 'translate(' + x + ',' + y + ')';
+        })
+        .style('fill', '#ccc');
+
+    sectorG.append('circle')
+        .attr('r', function(d) {
+            return rSectorScale(d.migrantCount);
+        })
+        .style('fill', function(d) {return color(d.region);})
+        .style("opacity", 0.5);
+
+    sectorG.append('text')
+        .text(function(d) {return `${d.region}:\n${d.migrantCount}`;})
+        // .attr('y', function(d) {
+        //     return rSectorScale(d.migrantCount) + 16;
+        // })
+        .attr('dy', '0.3em')
+        .style('text-anchor', 'middle')
+        .style('fill', 'black')
+        .style('font-size', 14)
+        .style('font-family', 'Open Sans');
+
 }
