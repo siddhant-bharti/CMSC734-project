@@ -893,7 +893,6 @@ function drawRegionPieChart() {
     const radius = Math.min(width, height) / 2;
 
     function pieChart(data, divId) {
-        // To show within this region and outside this region
         const svg = d3.select(divId)
         .append('svg')
         .attr('width', width)
