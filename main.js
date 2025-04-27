@@ -181,6 +181,9 @@ function originDropDown() {
 
     function handleDropdownChange(value) {
         originCountry = value;
+        // Remove selection from map when using drop down
+        resetHighlightFixed(originCountryLayer);
+        resetHighlightFixed(destinationCountryLayer);
         applyFilter();
         drawVisualizations();
     }
@@ -215,6 +218,10 @@ function destinationDropDown() {
 
     function handleDropdownChange(value) {
         destinationCountry = value;
+        // Remove selection from map when using drop down
+        resetHighlightFixed(originCountryLayer);
+        resetHighlightFixed(destinationCountryLayer);
+        // Show visualization
         applyFilter();
         drawVisualizations();
     }
