@@ -768,7 +768,7 @@ fetch('countries.geo.json')
 var originalMinYear;
 var originalMaxYear;
 function addPlayButton() {
-    const parentContainer = d3.select("#slider-range-container");
+    const parentContainer = d3.select("#controls-container-2");
     parentContainer.select("#play-button").remove(); // prevent duplicates
 
     let isPlaying = false;

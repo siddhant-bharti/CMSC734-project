@@ -9,21 +9,27 @@
     <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-    <div id="controls-container" style="display: flex; align-items: center;">
-        <div id="slider-range-container" style="display: flex; flex-direction: row; align-items: center;">
-            <label for="slider-svg" style="margin: 10px;">Years Considered</label>
-            <svg id="slider-svg" width="500" height="100" style="margin: 40px;">
-                <g id="slider-range" transform="translate(50,30)"></g>
-            </svg>
-            <button id="play-button" style="height: 50px; margin-left: 10px;">Play Year-by-Year</button>
+    <div id="parent-controls-container" style="display: flex; flex-direction: column;">
+        <div id="controls-container" style="display: flex; flex-direction: row; align-items: center;">
+            <div id="slider-range-container" style="display: flex; flex-direction: row; align-items: center;">
+                <label for="slider-svg" style="margin: 10px;">Years Considered</label>
+                <svg id="slider-svg" width="500" height="100" style="margin: 40px;">
+                    <g id="slider-range" transform="translate(50,30)"></g>
+                </svg>
+            </div>
+            <div id="other-selection" style="display: flex; flex-direction: row; align-items: center;">
+                <label for="origin-drop-down">Origin Country:</label>
+                <select id="origin-drop-down"></select>
+                <label for="destination-drop-down">Destination Country:</label>
+                <select id="destination-drop-down"></select>
+            </div>
         </div>
-        <div id="other-selection" style="display: flex; flex-direction: row; align-items: center;">
-            <label for="origin-drop-down">Origin Country:</label>
-            <select id="origin-drop-down"></select>
-            <label for="destination-drop-down">Destination Country:</label>
-            <select id="destination-drop-down"></select>
-            <label for="accept"> Region Analysis </label>
-            <input type="checkbox" id="region-analysis" name="region-analysis">
+        <div id="controls-container-2" style="display: flex; flex-direction: row; align-items: center;">
+            <button id="play-button" style="height: 50px; margin-left: 10px;">Play Year-by-Year</button>
+            <div>
+                <label for="accept" style="margin: 10px;"> Region Analysis </label>
+                <input type="checkbox" id="region-analysis" name="region-analysis">    
+            </div>
         </div>
     </div>
     <div id="main">
