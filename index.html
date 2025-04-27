@@ -30,8 +30,14 @@
         <label for="map">Click to select Origin and Destination Country</label>
         <div id="map" style="width: 1200px; height: 600px; border: 1px solid #777;"></div>
         <div style="display: flex;">
-            <div id="sankey" style="height: 600px; width: 600px; border: 1px solid #777; overflow: auto"></div>
-            <div id="bar" style="height: 600px; width: 600px; overflow-y: auto; border: 1px solid #777;"></div>
+            <div style="height: 600px; width: 600px; display: flex; flex-direction: column; align-items: center;">
+                <label for="sankey">Migrants Analysis Regions</label>
+                <div id="sankey" style="height: 600px; width: 600px; border: 1px solid #777; overflow: auto"></div>
+            </div>
+            <div style="height: 600px; width: 600px; display: flex; flex-direction: column; align-items: center;">
+                <label for="bar">Host Countries</label>
+                <div id="bar" style="height: 600px; width: 600px; overflow-y: auto; border: 1px solid #777;"></div>
+            </div>
             <div id="pies" style="height: 600px; width: 600px; display: flex; flex-direction: column; align-items: center;">
                 <label for="region-pie">Migration Flow Across Regions</label>
                 <div id="region-pie" style="height: 300px; width: 600px; overflow-y: auto; border: 1px solid #777;"></div>
