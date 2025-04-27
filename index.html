@@ -27,8 +27,10 @@
         </div>
     </div>
     <div id="main">
-        <label for="map">Click to select Origin and Destination Country</label>
-        <div id="map" style="width: 1200px; height: 600px; border: 1px solid #777;"></div>
+        <div style="display: flex; flex-direction: column; align-items: center;">
+            <label for="map" >Click to select Origin and Destination Country</label>
+            <div id="map" style="width: 1600px; height: 600px; border: 1px solid #777;"></div>
+        </div>
         <div style="display: flex;">
             <div style="height: 600px; width: 600px; display: flex; flex-direction: column; align-items: center;">
                 <label for="sankey">Migrants Analysis Regions</label>
@@ -38,11 +40,11 @@
                 <label for="bar">Host Countries</label>
                 <div id="bar" style="height: 600px; width: 600px; overflow-y: auto; border: 1px solid #777;"></div>
             </div>
-            <div id="pies" style="height: 600px; width: 600px; display: flex; flex-direction: column; align-items: center;">
+            <div id="pies" style="height: 600px; width: 400px; display: flex; flex-direction: column; align-items: center;">
                 <label for="region-pie">Migration Flow Across Regions</label>
-                <div id="region-pie" style="height: 300px; width: 600px; overflow-y: auto; border: 1px solid #777;"></div>
+                <div id="region-pie" style="height: 300px; width: 400px; overflow-y: auto; border: 1px solid #777;"></div>
                 <label for="pie">Migration Flow Across Countries</label>
-                <div id="pie" style="height: 300px; width: 600px; overflow-y: auto; border: 1px solid #777;"></div>
+                <div id="pie" style="height: 300px; width: 400px; overflow-y: auto; border: 1px solid #777;"></div>
             </div>
         </div>
     </div>
