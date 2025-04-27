@@ -905,11 +905,13 @@ function drawRegionPieChart() {
         .range(d3.schemeCategory10);
     
     const pie = d3.pie()
-        .value(d => d.migrantCount);
+        .value(d => d.migrantCount)
+        .padAngle(0.01);
     
     const arc = d3.arc()
         .innerRadius(0)
-        .outerRadius(radius);
+        .outerRadius(radius)
+        .cornerRadius(4);
     
     const slices = svg.selectAll('path')
         .data(pie(data))
@@ -946,11 +948,13 @@ function drawRegionPieChart() {
         .range(d3.schemeCategory10);
     
     const pie1 = d3.pie()
-        .value(d => d.migrantCount);
+        .value(d => d.migrantCount)
+        .padAngle(0.01);
     
     const arc1 = d3.arc()
         .innerRadius(0)
-        .outerRadius(radius);
+        .outerRadius(radius)
+        .cornerRadius(4);
     
     const slices1 = svg1.selectAll('path')
         .data(pie(data1))
