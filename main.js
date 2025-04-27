@@ -17,6 +17,7 @@ var myMap = L.map('map').setView([0, 0], 2);
 L.tileLayer('https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}{r}.{ext}', {
 	minZoom: 2,
 	maxZoom: 10,
+    apiKey: "dd11f179-845d-452f-b513-e4e91f30e33a",
 	attribution: '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 	ext: 'png'
 }).addTo(myMap);
