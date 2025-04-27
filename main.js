@@ -54,9 +54,9 @@ var minYear;  // stores mins year of the dataset
 var startYear;  // store start year for the filter
 var endYear;  // store end year for the filter
 var originCountry = "NONE";  // store origin
-var originCountryLayer;
+var originCountryLayer = "NONE";
 var destinationCountry = "NONE";  // store origin
-var destinationCountryLayer;
+var destinationCountryLayer = "NONE";
 var showRegionPie = false;
 
 // some mapping
@@ -703,7 +703,7 @@ function resetHighlightFixed(layer) {
     }
 }
 
-function zoomToFeature(e) {
+function selectCountry(e) {
     const layer = e.target;
 
     // console.log('Clicked country:', countryName);
@@ -727,22 +727,26 @@ function zoomToFeature(e) {
     } else {
         originCountry = "NONE";
         destinationCountry = "NONE";
+        originCountryLayer = "NONE";
+        destinationCountryLayer = "NONE";
+        setOriginDropDown(originCountry);
         setDestinationDropDown(destinationCountry);
     }
     // console.log(originCountry, destinationCountry);
 
-    if (originCountry !== "NONE") {
+    if (originCountry !== "NONE" && originCountryLayer !== "NONE") {
         highlightFeatureFixed(originCountryLayer);
     } else {
         resetHighlightFixed(originCountryLayer);
     }
 
-    if (destinationCountry !== "NONE") {
+    if (destinationCountry !== "NONE" && destinationCountryLayer !== "NONE") {
         highlightFeatureFixed(destinationCountryLayer);
     } else {
         resetHighlightFixed(destinationCountryLayer);
     }
-
+    console.log(originCountry, destinationCountry);
+    console.log(originCountryLayer, destinationCountryLayer);
     applyFilter();
     drawVisualizations();
 }
@@ -753,7 +757,7 @@ function onEachFeature(feature, layer) {
     layer.on({
         mouseover: highlightFeature,
         mouseout: resetHighlight,
-        click: zoomToFeature
+        click: selectCountry
     });
 }
 
