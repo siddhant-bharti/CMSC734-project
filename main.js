@@ -850,6 +850,7 @@ function originCheckBox() {
 // https://medium.com/@aleksej.gudkov/creating-a-pie-chart-with-d3-js-a-complete-guide-b69fd35268ea
 
 function drawRegionPieChart() {
+    d3.select("#region-pie").selectAll("svg").remove();
     d3.select("#pie").selectAll("svg").remove();
 
     if (!showRegionPie || originCountry === "NONE") {
@@ -887,12 +888,12 @@ function drawRegionPieChart() {
         data1.push({region: key, migrantCount: value});
       }
 
-    const width = 300;
-    const height = 300;
+    const width = 250;
+    const height = 250;
     const radius = Math.min(width, height) / 2;
     
     // To show within this region and outside this region
-    const svg = d3.select('#pie')
+    const svg = d3.select('#region-pie')
         .append('svg')
         .attr('width', width)
         .attr('height', height)
