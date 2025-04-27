@@ -888,93 +888,54 @@ function drawRegionPieChart() {
         data1.push({region: key, migrantCount: value});
       }
 
-    const width = 250;
-    const height = 250;
+    const width = 260;
+    const height = 260;
     const radius = Math.min(width, height) / 2;
-    
-    // To show within this region and outside this region
-    const svg = d3.select('#region-pie')
+
+    function pieChart(data, divId) {
+        // To show within this region and outside this region
+        const svg = d3.select(divId)
         .append('svg')
         .attr('width', width)
         .attr('height', height)
         .append('g')
         .attr('transform', `translate(${width / 2}, ${height / 2})`);
-    
-    const color = d3.scaleOrdinal()
-        .domain(data.map(d => d.region))
-        .range(d3.schemeCategory10);
-    
-    const pie = d3.pie()
-        .value(d => d.migrantCount)
-        .padAngle(0.01);
-    
-    const arc = d3.arc()
-        .innerRadius(0)
-        .outerRadius(radius)
-        .cornerRadius(4);
-    
-    const slices = svg.selectAll('path')
-        .data(pie(data))
-        .enter()
-        .append('path')
-        .attr('d', arc)
-        .attr('fill', d => color(d.data.region))
-        .attr('stroke', 'white')
-        .style('stroke-width', '2px');
-    
-    svg.selectAll('text')
-        .data(pie(data))
-        .enter()
-        .append('text')
-        .attr('transform', d => {
-            var [x, y] = arc.centroid(d);
-            var offset = (Math.random() - 0.5) * 20
-            return `translate(${x + offset}, ${y + offset}) rotate(315)`;
-        })
-        .text(function(d) {return `${d.data.region}: ${d.data.migrantCount}`;})
-        .style('font-size', '12px')
-        .style('fill', 'black');
 
-    // To show for all regions
-    const svg1 = d3.select('#pie')
-    .append('svg')
-    .attr('width', width)
-    .attr('height', height)
-    .append('g')
-    .attr('transform', `translate(${width / 2}, ${height / 2})`);
-    
-    const color1 = d3.scaleOrdinal()
-        .domain(data1.map(d => d.region))
-        .range(d3.schemeCategory10);
-    
-    const pie1 = d3.pie()
-        .value(d => d.migrantCount)
-        .padAngle(0.01);
-    
-    const arc1 = d3.arc()
-        .innerRadius(0)
-        .outerRadius(radius)
-        .cornerRadius(4);
-    
-    const slices1 = svg1.selectAll('path')
-        .data(pie(data1))
-        .enter()
-        .append('path')
-        .attr('d', arc)
-        .attr('fill', d => color(d.data.region))
-        .attr('stroke', 'white')
-        .style('stroke-width', '2px');
-    
-    svg1.selectAll('text')
-        .data(pie(data1))
-        .enter()
-        .append('text')
-        .attr('transform', d => {
-            var [x, y] = arc.centroid(d);
-            var offset = (Math.random() - 0.5) * 20
-            return `translate(${x + offset}, ${y + offset}) rotate(315)`;
-        })
-        .text(function(d) {return `${d.data.region}: ${d.data.migrantCount}`;})
-        .style('font-size', '12px')
-        .style('fill', 'black');
+        const color = d3.scaleOrdinal()
+            .domain(data.map(d => d.region))
+            .range(d3.schemeCategory10);
+
+        const pie = d3.pie()
+            .value(d => d.migrantCount)
+            .padAngle(0.01);
+
+        const arc = d3.arc()
+            .innerRadius(0)
+            .outerRadius(radius)
+            .cornerRadius(4);
+
+        const slices = svg.selectAll('path')
+            .data(pie(data))
+            .enter()
+            .append('path')
+            .attr('d', arc)
+            .attr('fill', d => color(d.data.region))
+            .attr('stroke', 'white')
+            .style('stroke-width', '2px');
+
+        svg.selectAll('text')
+            .data(pie(data))
+            .enter()
+            .append('text')
+            .attr('transform', d => {
+                var [x, y] = arc.centroid(d);
+                var offset = 0;//(Math.random() - 0.5) * 20
+                return `translate(${x + offset}, ${y + offset})`;
+            })
+            .text(function(d) {return `${d.data.region}: ${d.data.migrantCount}`;})
+            .style('font-size', '12px')
+            .style('fill', 'black');
+    }
+    pieChart(data, "#region-pie");
+    pieChart(data1, "#pie");
 }
