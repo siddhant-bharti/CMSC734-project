@@ -513,7 +513,7 @@ function drawBarChart() {
     var links = filtered_data[0];
     const width = 600;
     const height = 600;
-    const margin = { top: 30, right: 30, bottom: 50, left: 70 };
+    const margin = { top: 30, right: 30, bottom: 50, left: 50 };
     const barHeight = 25;
     const totalsByDestination = {};
 
@@ -563,7 +563,7 @@ function drawBarChart() {
     const xlabel = d3.scaleLinear()
         .domain([0, d3.max(sorteddata, d => d.migrantCount)])
         .nice()
-        .range([75, width - margin.left]);
+        .range([50, width - margin.left]);
 
     const y = d3.scaleBand()
         .domain(sorteddata.map(d => d.destination))
@@ -575,7 +575,7 @@ function drawBarChart() {
     // ENTER
     const barsEnter = bars.enter()
         .append("rect")
-        .attr("x", 75)
+        .attr("x", 50)
         .attr("y", (d, i) => margin.top + i * barHeight)
         .attr("height", barHeight - 1)
         .attr("width", 0)
@@ -605,7 +605,7 @@ function drawBarChart() {
     labels.enter()
         .append("text")
         .attr("class", "bar-label")
-        .attr("x", 70)
+        .attr("x", 45)
         .attr("y", (d, i) => margin.top + i * barHeight + (barHeight / 2))
         .attr("dy", "0.35em")
         .attr("text-anchor", "end")
@@ -664,7 +664,7 @@ function drawBarChart() {
     numberlabels.enter()
         .append("text")
         .attr("class", "bar-textlabel")
-        .attr("x", d => 80)
+        .attr("x", d => 55)
         .attr("y", (d, i) => margin.top + i * barHeight + (barHeight / 2))
         .attr("dy", ".35em")
         .attr("fill", "black")
@@ -678,7 +678,7 @@ function drawBarChart() {
     // UPDATE labels
     numberlabels.transition()
         .duration(50)
-        .attr("x", d => 80)
+        .attr("x", d => 55)
         .attr("y", (d, i) => margin.top + i * barHeight + (barHeight / 2))
         .text(d => d.migrantCount);
     
