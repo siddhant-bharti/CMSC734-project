@@ -54,12 +54,38 @@ var minYear;  // stores mins year of the dataset
 var startYear;  // store start year for the filter
 var endYear;  // store end year for the filter
 var originCountry = "NONE";  // store origin
+var originCountryLayer = "NONE";
 var destinationCountry = "NONE";  // store origin
+var destinationCountryLayer = "NONE";
+var showRegionPie = false;
 
 // some mapping
 var countryToIso;
 var isoToCountry;
 var asylumToRegion = new Map();
+
+
+// Coordinates for regions
+var regionCoordinates = {
+    'Europe': [51.0, 10.0], 
+    'Southern Africa': [-28.8166236, 24.991639], 
+    'Asia and the Pacific': [14.440122, 120.5511622],
+    'Middle East and North Africa': [33.8746648, 35.5667363],
+    'East and Horn of Africa, and Great Lakes': [57.719512, 11.94776],
+    'West and Central Africa': [14.6617324, -17.4372164],
+    'Americas': [39.7837304, -100.445882]
+}
+var regionCoordinates2D = {
+    'Europe': [51.0, 20.0], 
+    'Southern Africa': [-28.8166236, 24.991639], 
+    'Asia and the Pacific': [14.440122, 120.5511622],
+    'Middle East and North Africa': [33.8746648, 35.5667363],
+    'East and Horn of Africa, and Great Lakes': [57.719512, 11.94776],
+    'West and Central Africa': [14.6617324, -17.4372164],
+    'Americas': [19.7837304, -100.445882]
+}
+
+
 
 Promise.all([
     d3.csv('./datasets/dataset_denormalized_enriched_pruned.csv', function(row) {
@@ -87,6 +113,7 @@ Promise.all([
     drawSlider();
     addPlayButton();
     originDropDown();
+    originCheckBox();
     destinationDropDown();
     drawVisualizations();
 });
@@ -101,13 +128,14 @@ function doDrawSankey() {
 }
 
 function doDrawRegions() {
-    return true;
+    return showRegionPie;
 }
 
 function drawVisualizations() {
     drawFlowMap();
     drawBarChart();
     drawSankeyDiagram();
+    drawRegionPieChart();
 }
 
 function drawSlider() {
@@ -162,9 +190,18 @@ function originDropDown() {
 
     function handleDropdownChange(value) {
         originCountry = value;
+        // Remove selection from map when using drop down
+        resetHighlightFixed(originCountryLayer);
+        resetHighlightFixed(destinationCountryLayer);
         applyFilter();
         drawVisualizations();
     }
+}
+
+function setOriginDropDown(value) {
+    d3.select("#origin-drop-down")
+    .property("value", value)
+    .dispatch("change");
 }
 
 function destinationDropDown() {
@@ -190,9 +227,19 @@ function destinationDropDown() {
 
     function handleDropdownChange(value) {
         destinationCountry = value;
+        // Remove selection from map when using drop down
+        resetHighlightFixed(originCountryLayer);
+        resetHighlightFixed(destinationCountryLayer);
+        // Show visualization
         applyFilter();
         drawVisualizations();
     }
+}
+
+function setDestinationDropDown(value) {
+    d3.select("#destination-drop-down")
+    .property("value", value)
+    .dispatch("change");
 }
 
 function applyFilter() {
@@ -286,7 +333,7 @@ function drawSankeyDiagram() {
     const rawData = sankey_filtered_data[0];
     const nodeNames = Array.from(
         new Set(rawData.flatMap(d => {
-            if (doDrawRegions){
+            if (doDrawRegions()){
                 const entries = [d.destinationRegion + "_d"];
                 if (asylumToRegion.has(d.origin)) {
                     entries.push(asylumToRegion.get(d.origin) + "_o");
@@ -306,7 +353,7 @@ function drawSankeyDiagram() {
     const nodes = nodeNames.map((name, index) => ({ name, index }));
     const nodeIndexMap = new Map(nodes.map(n => [n.name, n.index]));
     const linkMap = new Map();
-    if (doDrawRegions) {
+    if (doDrawRegions()) {
         rawData.forEach(d => {
             if (asylumToRegion.has(d.origin)) {
                 const originRegionIdx = nodeIndexMap.get(asylumToRegion.get(d.origin) + "_o");
@@ -366,7 +413,7 @@ function drawSankeyDiagram() {
 
     d3.select("#sankey").select("svg").remove();
 
-    if (doDrawSankey || doDrawRegions){
+    if (doDrawSankey() || doDrawRegions()){
         var color = d3.scaleOrdinal(d3.schemeCategory10);
 
         var margin = {top: 10, right: 10, bottom: 10, left: 10},
@@ -427,7 +474,7 @@ function drawSankeyDiagram() {
         .attr("text-anchor", "end")
         .attr("transform", null)
         .text(function(d) { 
-            if(doDrawRegions){
+            if(doDrawRegions()){
                 return d.name.slice(0,-2);
             }else{
                 return d.name;
@@ -605,10 +652,141 @@ function drawBarChart() {
     }
 }
 
+// Country selection logic is inspired from (syntax)
+// https://medium.com/@limeira.felipe94/highlighting-countries-on-a-map-with-leaflet-f84b7efee0a9
+
+function style(feature) {
+    return {
+        fillColor: 'gray',
+        weight: 1,
+        opacity: 1,
+        color: 'black',
+        fillOpacity: 0.0
+    };
+}
+
+
+function highlightFeature(e) {
+    var layer = e.target;
+    layer.setStyle({
+        weight: 5,
+        color: 'red',
+        fillColor: 'red',
+        dashArray: '',
+        fillOpacity: 0.5
+    });
+    if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+        layer.bringToFront();
+    }
+}
+
+function resetHighlight(e) {
+    var layer = e.target;
+    try {
+        if (layer !== originCountryLayer && layer !== destinationCountryLayer) {
+            geojson.resetStyle(layer);
+        }
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+function highlightFeatureFixed(layer) {
+    layer.setStyle({
+        weight: 5,
+        color: 'red',
+        fillColor: 'red',
+        dashArray: '',
+        fillOpacity: 0.5
+    });
+    if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+        layer.bringToFront();
+    }
+}
+
+function resetHighlightFixed(layer) {
+    try {
+        geojson.resetStyle(layer);
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+function selectCountry(e) {
+    const layer = e.target;
+
+    // console.log('Clicked country:', countryName);
+    // console.log(isoToCountry, layer.feature.id, isoToCountry[layer.feature.id]);
+
+    // If data is not available for this country exit
+    if (!(layer.feature.id in isoToCountry)) {
+        alert("Data not found for " + layer.feature.properties.name);
+        return;
+    }
+    
+    if (originCountry === "NONE" && destinationCountry === "NONE") {
+        originCountry = isoToCountry[layer.feature.id];
+        originCountryLayer = layer;
+        setOriginDropDown(originCountry);
+    } else if (destinationCountry === "NONE") {
+        destinationCountry = isoToCountry[layer.feature.id];
+        destinationCountryLayer = layer;
+        setOriginDropDown(originCountry);
+        setDestinationDropDown(destinationCountry);
+    } else {
+        originCountry = "NONE";
+        destinationCountry = "NONE";
+        originCountryLayer = "NONE";
+        destinationCountryLayer = "NONE";
+        setOriginDropDown(originCountry);
+        setDestinationDropDown(destinationCountry);
+    }
+    // console.log(originCountry, destinationCountry);
+
+    if (originCountry !== "NONE" && originCountryLayer !== "NONE") {
+        highlightFeatureFixed(originCountryLayer);
+    } else {
+        resetHighlightFixed(originCountryLayer);
+    }
+
+    if (destinationCountry !== "NONE" && destinationCountryLayer !== "NONE") {
+        highlightFeatureFixed(destinationCountryLayer);
+    } else {
+        resetHighlightFixed(destinationCountryLayer);
+    }
+    applyFilter();
+    drawVisualizations();
+}
+
+
+// Define events for each feature (country)
+function onEachFeature(feature, layer) {
+    layer.on({
+        mouseover: highlightFeature,
+        mouseout: resetHighlight,
+        click: selectCountry
+    });
+}
+
+// Add GeoJSON data to the main map
+let geojson;
+fetch('countries.geo.json')
+.then(response => response.json())
+.then(data => {
+    geojson = L.geoJson(data, {
+        style: style,
+        onEachFeature: onEachFeature
+    }).addTo(myMap);
+})
+.catch(error => {
+    console.error('Error loading GeoJSON on the Main Map:', error);
+});
+
+
 var originalMinYear;
 var originalMaxYear;
 function addPlayButton() {
-    const parentContainer = d3.select("#slider-range-container");
+    const parentContainer = d3.select("#controls-container-2");
     parentContainer.select("#play-button").remove(); // prevent duplicates
 
     let isPlaying = false;
@@ -667,4 +845,167 @@ function addPlayButton() {
                 isPlaying = false;
             }
         });
+}
+
+
+function originCheckBox() {
+    var checkbox = d3.select("#region-analysis");
+    checkbox.on("change", function () {
+        let isChecked = d3.select(this).property("checked");
+      
+        if (isChecked) {
+            showRegionPie = true;
+        } else {
+            showRegionPie = false;
+        }
+        applyFilter();
+        drawVisualizations();
+    });
+}
+
+// Pic chart implementation is inspired from (syntax)
+// https://medium.com/@aleksej.gudkov/creating-a-pie-chart-with-d3-js-a-complete-guide-b69fd35268ea
+
+function drawRegionPieChart() {
+    d3.select("#region-pie").selectAll("svg").remove();
+    d3.select("#pie").selectAll("svg").remove();
+
+    if (!showRegionPie || originCountry === "NONE") {
+        return;
+    }
+    var regionMigrantCount = new Map();
+
+    var originCountryRegion = asylumToRegion.get(originCountry);
+    var migrantCountInsideRegion = 0;
+    var migrantCountOutsidesideRegion = 0;
+
+    filtered_data[0].forEach(d => {
+        var region = asylumToRegion.get(d.destination);
+        if (regionMigrantCount.has(region)) {
+            regionMigrantCount.set(region, regionMigrantCount.get(region) + d.migrantCount);
+        } else {
+            regionMigrantCount.set(region, d.migrantCount);
+        }
+
+        if (region === originCountryRegion) {
+            migrantCountInsideRegion = migrantCountInsideRegion + d.migrantCount;
+        } else {
+            migrantCountOutsidesideRegion = migrantCountOutsidesideRegion + d.migrantCount;
+        }
+    });
+
+    const data = [
+        {region: "Within Region", migrantCount: migrantCountInsideRegion},
+        {region: "Outside Region", migrantCount: migrantCountOutsidesideRegion},
+    ]
+    
+    const data1 = [];
+
+    for (const [key, value] of regionMigrantCount.entries()) {
+        data1.push({region: key, migrantCount: value});
+      }
+
+    const width = 260;
+    const height = 260;
+    const radius = Math.min(width, height) / 2;
+
+    function pieChart(data, divId) {
+        const svg = d3.select(divId)
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height)
+        .append('g')
+        .attr('transform', `translate(${width / 2}, ${height / 2})`);
+
+        const color = d3.scaleOrdinal()
+            .domain(data.map(d => d.region))
+            .range(d3.schemeCategory10);
+
+        const pie = d3.pie()
+            .value(d => d.migrantCount)
+            .padAngle(0.01);
+
+        const arc = d3.arc()
+            .innerRadius(0)
+            .outerRadius(radius)
+            .cornerRadius(4);
+        const labelArc = d3.arc()
+            .innerRadius(0)
+            .outerRadius(radius * 0.5);
+
+        const slices = svg.selectAll('path')
+            .data(pie(data))
+            .enter()
+            .append('path')
+            .attr('d', arc)
+            .attr('fill', d => color(d.data.region))
+            .attr('stroke', 'white')
+            .style('stroke-width', '2px');
+
+        svg.selectAll('text')
+            .data(pie(data))
+            .enter()
+            .append('text')
+            .attr('transform', d => {
+                var [x, y] = labelArc.centroid(d);
+                return `translate(${x}, ${y})`;
+            })
+            .text(function(d) {return `${d.data.region}: ${d.data.migrantCount}`;})
+            .style('font-size', '12px')
+            .style('fill', 'black');
+    }
+    pieChart(data, "#region-pie");
+    // pieChart(data1, "#pie");
+
+    var width2 = 350;
+    var height2 = 300;
+    function projectTo2D(lat, lon) {
+        return [((lon + 180) / 360) * (width2 - 100), ((90 - lat) / 180) * height2];
+    }
+    var maxMC = d3.max(data1, d => d.migrantCount);
+    var minMC = d3.min(data1, d => d.migrantCount);
+
+    var rSectorScale = d3.scaleSqrt()
+    .domain([minMC, maxMC])
+    .range([10, 50]);
+
+    const svg = d3.select("#pie")
+    .append('svg')
+    .attr('width', width2)
+    .attr('height', height2);
+
+    const color = d3.scaleOrdinal()
+            .domain(data.map(d => d.region))
+            .range(d3.schemeCategory10);
+
+    var sectorG = svg.selectAll('.sector')
+        .data(data1)
+        .enter()
+        .append('g')
+        .attr('class', 'sector')
+        .attr('transform', function(d) {
+            var [lat, lon] = regionCoordinates2D[d.region];
+            var [x, y] = projectTo2D(lat, lon);
+            return 'translate(' + x + ',' + y + ')';
+        })
+        .style('fill', '#ccc');
+
+    sectorG.append('circle')
+        .attr('r', function(d) {
+            return rSectorScale(d.migrantCount);
+        })
+        .style('fill', function(d) {return color(d.region);})
+        .style("opacity", 0.5);
+
+    sectorG.append('text')
+        .text(function(d) {return `${d.region}:\n${d.migrantCount}`;})
+        // .attr('y', function(d) {
+        //     return rSectorScale(d.migrantCount) + 16;
+        // })
+        .attr('dy', '0.3em')
+        .style('text-anchor', 'middle')
+        .style('fill', 'black')
+        .style('font-size', 14)
+        .style('font-family', 'Open Sans');
+
 }
