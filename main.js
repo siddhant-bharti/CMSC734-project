@@ -58,6 +58,7 @@ var originCountryLayer = "NONE";
 var destinationCountry = "NONE";  // store origin
 var destinationCountryLayer = "NONE";
 var showRegionPie = false;
+var showRegionBar = false;
 
 // some mapping
 var countryToIso;
@@ -517,21 +518,44 @@ function drawBarChart() {
     const barHeight = 25;
     const totalsByDestination = {};
 
-    if (originCountry !== "NONE") {
-        links.forEach(d => {
-            if (!totalsByDestination[d.destination]) {
-                totalsByDestination[d.destination] = { migrantCount: 0, AsylumISO: d.AsylumISO };
-            }
-            totalsByDestination[d.destination].migrantCount += d.migrantCount;
-        });
+
+    if (showRegionBar === true)
+    {
+        // console.log("Region Out");
+        if (originCountry !== "NONE") {
+            links.forEach(d => {
+                if (!totalsByDestination[d.destination]) {
+                    totalsByDestination[d.destination] = { migrantCount: 0, AsylumISO: d.AsylumISO };
+                }
+                totalsByDestination[d.destination].migrantCount += d.migrantCount;
+            });
+        } else {
+            links.forEach(d => {
+                if (!totalsByDestination[d.origin]) {
+                    totalsByDestination[d.origin] = { migrantCount: 0, AsylumISO: d.OriginISO };
+                }
+                totalsByDestination[d.origin].migrantCount += d.migrantCount;
+            });
+        }
+
     } else {
-        links.forEach(d => {
-            if (!totalsByDestination[d.origin]) {
-                totalsByDestination[d.origin] = { migrantCount: 0, AsylumISO: d.OriginISO };
-            }
-            totalsByDestination[d.origin].migrantCount += d.migrantCount;
-        });
+        if (originCountry !== "NONE") {
+            links.forEach(d => {
+                if (!totalsByDestination[d.destination]) {
+                    totalsByDestination[d.destination] = { migrantCount: 0, AsylumISO: d.AsylumISO };
+                }
+                totalsByDestination[d.destination].migrantCount += d.migrantCount;
+            });
+        } else {
+            links.forEach(d => {
+                if (!totalsByDestination[d.origin]) {
+                    totalsByDestination[d.origin] = { migrantCount: 0, AsylumISO: d.OriginISO };
+                }
+                totalsByDestination[d.origin].migrantCount += d.migrantCount;
+            });
+        }
     }
+    
     
     
     // Now map into a clean array
@@ -892,8 +916,10 @@ function originCheckBox() {
       
         if (isChecked) {
             showRegionPie = true;
+            showRegionBar = true;
         } else {
             showRegionPie = false;
+            showRegionBar = false
         }
         applyFilter();
         drawVisualizations();
