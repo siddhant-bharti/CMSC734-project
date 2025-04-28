@@ -6,6 +6,7 @@ var mapHeight = +map.attr('height');
 var vertices = d3.map();
 var activeMapType = 'nodes_links';
 var nodeFeatures = [];
+var countryToLayer = new Map();
 
 var myMap = L.map('map').setView([0, 0], 2);
 // L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -57,6 +58,10 @@ var originCountry = "NONE";  // store origin
 var originCountryLayer = "NONE";
 var destinationCountry = "NONE";  // store origin
 var destinationCountryLayer = "NONE";
+var originRegion = "NONE";
+var destinationRegion = "NONE";
+var originRegionLayer = "NONE";
+var destinationRegionLayer = "NONE";
 var showRegionPie = false;
 var showRegionBar = false;
 
@@ -64,6 +69,7 @@ var showRegionBar = false;
 var countryToIso;
 var isoToCountry;
 var asylumToRegion = new Map();
+var regionToCountries = new Map();
 
 
 // Coordinates for regions
@@ -86,7 +92,7 @@ var regionCoordinates2D = {
     'Americas': [19.7837304, -100.445882]
 }
 
-
+let geojson;
 
 Promise.all([
     d3.csv('./datasets/dataset_denormalized_enriched_pruned.csv', function(row) {
@@ -105,10 +111,18 @@ Promise.all([
     const mappings = createCountryISOMapping(data[0]);
     countryToIso = mappings.countryToIso; 
     isoToCountry = mappings.isoToCountry;
-
     global_data[0].forEach(row => {
         asylumToRegion.set(row.destination, row.destinationRegion); 
+        if(!regionToCountries.has(row.destinationRegion)){
+            regionToCountries.set(row.destinationRegion, new Array());
+        }
+        if(!regionToCountries.get(row.destinationRegion).includes(row.destination)){
+            regionToCountries.get(row.destinationRegion).push(row.destination);
+        }
     });
+
+    // Add GeoJSON data to the main map
+    loadGeoJSON();
 
     applyFilter();
     drawSlider();
@@ -118,6 +132,23 @@ Promise.all([
     destinationDropDown();
     drawVisualizations();
 });
+
+function loadGeoJSON(){
+    if(geojson){
+        myMap.removeLayer(geojson);
+    }
+    fetch('countries.geo.json')
+    .then(response => response.json())
+    .then(data => {
+        geojson = L.geoJson(data, {
+            style: style,
+            onEachFeature: onEachFeature
+        }).addTo(myMap);
+    })
+    .catch(error => {
+        console.error('Error loading GeoJSON on the Main Map:', error);
+    });
+}
 
 function doDrawSankey() {
     if (originCountry === "NONE" && destinationCountry === "NONE") {
@@ -637,7 +668,6 @@ function drawBarChart() {
         .attr("fill", "black")
         .style("font-size", "10px")
         .text(d => {
-            console.log("Label ENTER - AsylumISO:", d.AsylumISO);
             return d.destination;
         })
         .transition()
@@ -741,11 +771,49 @@ function highlightFeature(e) {
     }
 }
 
+function highlightFeatureRegion(e){
+    var parentLayer = e.target;
+    const parentISO = parentLayer.feature.id;
+    const parentRegion = asylumToRegion.get(isoToCountry[parentISO]);
+    if(regionToCountries.has(parentRegion)){
+        const countryList = regionToCountries.get(parentRegion);
+        countryList.forEach(countryName => {
+            const countryISO = countryToIso[countryName];
+            if(countryToLayer.has(countryISO)){
+                const countryLayer = countryToLayer.get(countryISO);
+                highlightFeatureFixed(countryLayer);
+            }
+        });
+    }
+}
+
 function resetHighlight(e) {
     var layer = e.target;
     try {
         if (layer !== originCountryLayer && layer !== destinationCountryLayer) {
             geojson.resetStyle(layer);
+        }
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+function resetHighlightRegion(e){
+    var parentLayer = e.target;
+    try {
+        if (parentLayer !== originRegionLayer && parentLayer !== destinationRegionLayer) {
+            const parentISO = parentLayer.feature.id;
+            const parentRegion = asylumToRegion.get(isoToCountry[parentISO]);
+            if(regionToCountries.has(parentRegion)){
+                const countryList = regionToCountries.get(parentRegion);
+                countryList.forEach(countryName => {
+                    const countryISO = countryToIso[countryName];
+                    if(countryToLayer.has(countryISO)){
+                        const countryLayer = countryToLayer.get(countryISO);
+                        geojson.resetStyle(countryLayer);
+                    }
+                });
+            }
         }
     } catch (error) {
         console.log(error);
@@ -765,12 +833,40 @@ function highlightFeatureFixed(layer) {
     }
 }
 
+function highlightFeatureFixedRegion(parentLayer){
+    const parentISO = parentLayer.feature.id;
+    const parentRegion = asylumToRegion.get(isoToCountry[parentISO]);
+    if(regionToCountries.has(parentRegion)){
+        const countryList = regionToCountries.get(parentRegion);
+        countryList.forEach(countryName => {
+            const countryISO = countryToIso[countryName];
+            if(countryToLayer.has(countryISO)){
+                const countryLayer = countryToLayer.get(countryISO);
+                highlightFeatureFixed(countryLayer);
+            }
+        });
+    }
+}
+
 function resetHighlightFixed(layer) {
     try {
         geojson.resetStyle(layer);
     } catch (error) {
         console.log(error);
     }
+}
+
+function resetHighlightFixedRegion(parentLayer){
+    const parentISO = parentLayer.feature.id;
+    const parentRegion = asylumToRegion.get(isoToCountry[parentISO]);
+    const countryList = regionToCountries.get(parentRegion);
+    countryList.forEach(countryName => {
+        const countryISO = countryToIso[countryName];
+        if(countryToLayer.has(countryISO)){
+            const countryLayer = countryToLayer.get(countryISO);
+            resetHighlightFixed(countryLayer);
+        }
+    });
 }
 
 function selectCountry(e) {
@@ -819,29 +915,60 @@ function selectCountry(e) {
     drawVisualizations();
 }
 
+function selectRegion(e){
+    const parentLayer = e.target;
+    const parentISO = parentLayer.feature.id;
+    const parentRegion = asylumToRegion.get(isoToCountry[parentISO]);
+    
+    if (originRegion === "NONE" && destinationRegion === "NONE") {
+        originRegion = parentRegion;
+        originRegionLayer = parentLayer;
+    } else if (destinationCountry === "NONE") {
+        destinationRegion = parentRegion;
+        destinationRegionLayer = parentLayer;
+    } else {
+        originRegion = "NONE";
+        destinationRegion = "NONE";
+        originRegionLayer = "NONE";
+        destinationRegionLayer = "NONE";
+    }
+
+    const countryList = regionToCountries.get(parentRegion);
+    if(originRegion !== "NONE" && originRegionLayer !== "NONE"){
+        highlightFeatureFixedRegion(parentLayer);
+    }else{
+        resetHighlightFixedRegion(parentLayer);
+    }
+    if(destinationRegion !== "NONE" && destinationRegionLayer !== "NONE"){
+        highlightFeatureFixedRegion(parentLayer);
+    }else{
+        resetHighlightFixedRegion(parentLayer);
+    }
+    applyFilter();
+    drawVisualizations();
+}
+
 
 // Define events for each feature (country)
 function onEachFeature(feature, layer) {
-    layer.on({
-        mouseover: highlightFeature,
-        mouseout: resetHighlight,
-        click: selectCountry
-    });
+    const countryISO = feature.id;
+    if(countryISO in isoToCountry){
+        countryToLayer.set(countryISO, layer);
+    }
+    if(showRegionPie){
+        layer.on({
+            mouseover: highlightFeatureRegion,
+            mouseout: resetHighlightRegion,
+            click: selectRegion
+        });
+    }else{
+        layer.on({
+            mouseover: highlightFeature,
+            mouseout: resetHighlight,
+            click: selectCountry
+        });
+    }
 }
-
-// Add GeoJSON data to the main map
-let geojson;
-fetch('countries.geo.json')
-.then(response => response.json())
-.then(data => {
-    geojson = L.geoJson(data, {
-        style: style,
-        onEachFeature: onEachFeature
-    }).addTo(myMap);
-})
-.catch(error => {
-    console.error('Error loading GeoJSON on the Main Map:', error);
-});
 
 
 var originalMinYear;
@@ -921,6 +1048,7 @@ function originCheckBox() {
             showRegionPie = false;
             showRegionBar = false
         }
+        loadGeoJSON();
         applyFilter();
         drawVisualizations();
     });
