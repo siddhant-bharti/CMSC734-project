@@ -650,6 +650,41 @@ function drawBarChart() {
         xAxisGroup.selectAll("text")
             .style("font-size", "10px");
     }
+
+    svg.selectAll("text.bar-label").remove();
+    // Show immigration number on each bar.
+    const numberlabels = svg.selectAll("text.bar-textlabel").data(sorteddata, d => d.destination);
+    // numberlabels.exit()
+    //             .remove();
+
+    // ENTER labels
+    numberlabels.enter()
+        .append("text")
+        .attr("class", "bar-bar-textlabel")
+        .attr("x", d => 55)
+        .attr("y", (d, i) => margin.top + i * barHeight + (barHeight / 2))
+        .attr("dy", ".35em")
+        .attr("fill", "black")
+        .attr("font-size", "12px")
+        .text(d => d.migrantCount)
+        .style("opacity", 0)
+        .transition()
+        .duration(50)
+        .style("opacity", 1);
+    
+    // UPDATE labels
+    numberlabels.transition()
+        .duration(50)
+        .attr("x", d => 55)
+        .attr("y", (d, i) => margin.top + i * barHeight + (barHeight / 2))
+        .text(d => d.migrantCount);
+    
+    // EXIT labels
+    numberlabels.exit()
+        .transition()
+        .duration(10)
+        .style("opacity", 0)
+        .remove();
 }
 
 // Country selection logic is inspired from (syntax)
