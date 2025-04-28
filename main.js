@@ -448,7 +448,7 @@ function drawSankeyDiagram() {
         var color = d3.scaleOrdinal(d3.schemeCategory10);
 
         var margin = {top: 10, right: 10, bottom: 10, left: 10},
-        width = 600 - margin.left - margin.right,
+        width = 390 - margin.left - margin.right,
         height = 2000 - margin.top - margin.bottom;
 
         var svg = d3.select("#sankey").append("svg")
@@ -542,9 +542,9 @@ function stringToColor(str) {
 
 function drawBarChart() {
     var links = filtered_data[0];
-    const width = 600;
+    const width = 400;
     const height = 600;
-    const margin = { top: 30, right: 30, bottom: 50, left: 50 };
+    const margin = { top: 30, right: 30, bottom: 30, left: 30 };
     const barHeight = 25;
     const totalsByDestination = {};
 
@@ -613,13 +613,14 @@ function drawBarChart() {
         .attr("fill", d => stringToColor(d.AsylumISO))
         .transition()
         .duration(500)
-        .attr("width", d => x(d.migrantCount) - x(0));
+        .attr("width", d => xlabel(d.migrantCount) - xlabel(0));   // <<<<<< use xlabel here
+
     
     // UPDATE
     bars.transition()
         .duration(500)
         .attr("y", (d, i) => margin.top + i * barHeight)
-        .attr("width", d => x(d.migrantCount) - x(0));
+        .attr("width", d => xlabel(d.migrantCount) - x(0));
     
     // EXIT
     bars.exit()
@@ -669,20 +670,18 @@ function drawBarChart() {
         // First time: create the axis group
         xAxisGroup = svg.append("g")
             .attr("class", "x-axis")
-            .attr("transform", `translate(0, ${margin.top - 5})`)
-            .call(d3.axisTop(xlabel).ticks(5))
-            .selectAll("text")
-            .style("font-size", "10px");
-    } else {
-        // Update: transition the axis
-        xAxisGroup.transition()
-            .duration(500)
-            .call(d3.axisTop(xlabel).ticks(5));
-
-        // Optional: update label style
-        xAxisGroup.selectAll("text")
-            .style("font-size", "10px");
+            .attr("transform", `translate(0, ${margin.top - 5})`);
     }
+    
+    // Whether first time or updating: transition and update axis properly
+    xAxisGroup.transition()
+        .duration(500)
+        .call(d3.axisTop(xlabel).ticks(5));
+    
+    // Optional: update label style after axis is called
+    xAxisGroup.selectAll("text")
+        .style("font-size", "10px");
+    
 
     svg.selectAll("text.bar-textlabel").remove();
     // Show immigration number on each bar.

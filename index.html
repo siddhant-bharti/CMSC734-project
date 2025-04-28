@@ -23,37 +23,45 @@
                 <label for="destination-drop-down" style="margin: 10px;">Destination Country:</label>
                 <select id="destination-drop-down"></select>
             </div>
-        </div>
-        <div id="controls-container-2" style="display: flex; flex-direction: row; align-items: center;">
-            <button id="play-button" style="height: 50px; margin-left: 10px;">Play Year-by-Year</button>
-            <div>
-                <label for="accept" style="margin: 10px;"> Region Analysis </label>
-                <input type="checkbox" id="region-analysis" name="region-analysis">    
+            <div id="controls-container-2" style="display: flex; flex-direction: row; align-items: center;">
+                <button id="play-button" style="height: 50px; margin-left: 10px;">Play Year-by-Year</button>
+                <div>
+                    <label for="accept" style="margin: 10px;"> Region Analysis </label>
+                    <input type="checkbox" id="region-analysis" name="region-analysis">    
+                </div>
             </div>
         </div>
     </div>
-    <div id="main">
+    <div id="main" style="display: flex; flex-direction: row; align-items: flex-start; gap: 20px;">
+    
+        <!-- Bar Chart -->
         <div style="display: flex; flex-direction: column; align-items: center;">
-            <label for="map" >Click to select Origin and Destination Country</label>
-            <div id="map" style="width: 1600px; height: 600px; border: 1px solid #777;"></div>
+            <label for="bar">Host Countries</label>
+            <div id="bar" style="height: 600px; width: 400px; border: 1px solid #777; overflow-y: auto;"></div>
         </div>
-        <div style="display: flex;">
-            <div style="height: 600px; width: 600px; display: flex; flex-direction: column; align-items: center;">
-                <label for="sankey">Migrants Analysis Regions</label>
-                <div id="sankey" style="height: 600px; width: 600px; border: 1px solid #777; overflow: auto"></div>
-            </div>
-            <div style="height: 600px; width: 600px; display: flex; flex-direction: column; align-items: center;">
-                <label for="bar">Host Countries</label>
-                <div id="bar" style="height: 600px; width: 600px; overflow-y: auto; border: 1px solid #777;"></div>
-            </div>
-            <div id="pies" style="height: 600px; width: 400px; display: flex; flex-direction: column; align-items: center;">
-                <label for="region-pie">Migration Flow Across Regions (Outbound)</label>
-                <div id="region-pie" style="height: 300px; width: 400px; overflow-y: auto; border: 1px solid #777;"></div>
-                <!-- <label for="pie">Migration Flow Across Countries</label> -->
-                <div id="pie" style="height: 300px; width: 400px; overflow-y: auto; border: 1px solid #777;"></div>
-            </div>
+
+        <!-- Map -->
+        <div style="display: flex; flex-direction: column; align-items: center;">
+            <label for="map">Click to select Origin and Destination Country</label>
+            <div id="map" style="width: 800px; height: 600px; border: 1px solid #777;"></div>
         </div>
+    
+
+        <!-- Sankey Diagram -->
+        <div style="display: flex; flex-direction: column; align-items: center;">
+            <label for="sankey">Migrants Analysis Regions</label>
+            <div id="sankey" style="height: 600px; width: 400px; border: 1px solid #777; overflow: auto;"></div>
+        </div>
+    
+        <!-- Pie Charts -->
+        <div id="pies" style="display: flex; flex-direction: column; align-items: center;">
+            <label for="region-pie">Migration Flow Across Regions (Outbound)</label>
+            <div id="region-pie" style="height: 300px; width: 300px; border: 1px solid #777; overflow-y: auto;"></div>
+            <div id="pie" style="height: 300px; width: 300px; border: 1px solid #777; overflow-y: auto;"></div>
+        </div>
+    
     </div>
+    
 </body>
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
