@@ -589,7 +589,7 @@ function drawBarChart() {
     bars.transition()
         .duration(500)
         .attr("y", (d, i) => margin.top + i * barHeight)
-        .attr("width", d => x(d.migrantCount) - x(0));
+        .attr("width", d => xlabel(d.migrantCount) - x(0));
     
     // EXIT
     bars.exit()
