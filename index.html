@@ -12,54 +12,59 @@
     <div id="parent-controls-container" style="display: flex; flex-direction: column;">
         <div id="controls-container" style="display: flex; flex-direction: row; align-items: center;">
             <div id="slider-range-container" style="display: flex; flex-direction: row; align-items: center;">
-                <label for="slider-svg" style="margin: 10px;">Years Considered</label>
-                <svg id="slider-svg" width="500" height="100" style="margin: 40px;">
-                    <g id="slider-range" transform="translate(50,30)"></g>
+                <label for="slider-svg" style="margin: 5px;">Years Considered</label>
+                <svg id="slider-svg" width="350" height="50" style="margin: 10px;">
+                    <g id="slider-range" transform="translate(10,30)"></g>
                 </svg>
             </div>
             <div id="other-selection" style="display: flex; flex-direction: row; align-items: center;">
-                <label for="origin-drop-down" style="margin: 10px;">Origin Country:</label>
+                <label for="origin-drop-down" style="margin: 5px;">Origin Country:</label>
                 <select id="origin-drop-down"></select>
-                <label for="destination-drop-down" style="margin: 10px;">Destination Country:</label>
+                <label for="destination-drop-down" style="margin: 5px;">Destination Country:</label>
                 <select id="destination-drop-down"></select>
             </div>
             <div id="controls-container-2" style="display: flex; flex-direction: row; align-items: center;">
-                <button id="play-button" style="height: 50px; margin-left: 10px;">Play Year-by-Year</button>
+                <button id="play-button" style="height: 50px; margin-left: 5px;">Play Year-by-Year</button>
                 <div>
-                    <label for="accept" style="margin: 10px;"> Region Analysis </label>
+                    <label for="accept" style="margin: 5px;"> Region Analysis </label>
                     <input type="checkbox" id="region-analysis" name="region-analysis">    
                 </div>
             </div>
         </div>
     </div>
-    <div id="main" style="display: flex; flex-direction: row; align-items: flex-start; gap: 20px;">
+    <div id="main-parent" style="display: flex; flex-direction: column; align-items: flex-start;">
+        <div id="main" style="display: flex; flex-direction: row; align-items: flex-start; gap: 20px;">
     
-        <!-- Bar Chart -->
-        <div style="display: flex; flex-direction: column; align-items: center;">
-            <label for="bar">Host Countries</label>
-            <div id="bar" style="height: 600px; width: 400px; border: 1px solid #777; overflow-y: auto;"></div>
-        </div>
-
-        <!-- Map -->
-        <div style="display: flex; flex-direction: column; align-items: center;">
-            <label for="map">Click to select Origin and Destination Country</label>
-            <div id="map" style="width: 800px; height: 600px; border: 1px solid #777;"></div>
-        </div>
+            <!-- Bar Chart -->
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <label for="bar">Host Countries</label>
+                <div id="bar" style="height: 500px; width: 400px; border: 1px solid #777; overflow-y: auto;"></div>
+            </div>
     
-
-        <!-- Sankey Diagram -->
-        <div style="display: flex; flex-direction: column; align-items: center;">
-            <label for="sankey">Migrants Analysis Regions</label>
-            <div id="sankey" style="height: 600px; width: 400px; border: 1px solid #777; overflow: auto;"></div>
-        </div>
+            <!-- Map -->
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <label for="map">Click to select Origin and Destination Country</label>
+                <div id="map" style="width: 800px; height: 500px; border: 1px solid #777;"></div>
+            </div>
+        
     
-        <!-- Pie Charts -->
-        <div id="pies" style="display: flex; flex-direction: column; align-items: center;">
-            <label for="region-pie">Migration Flow Across Regions (Outbound)</label>
-            <div id="region-pie" style="height: 300px; width: 300px; border: 1px solid #777; overflow-y: auto;"></div>
-            <div id="pie" style="height: 300px; width: 300px; border: 1px solid #777; overflow-y: auto;"></div>
+            <!-- Sankey Diagram -->
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <label for="sankey">Migrants Analysis Regions</label>
+                <div id="sankey" style="height: 500px; width: 400px; border: 1px solid #777; overflow: auto;"></div>
+            </div>
+        
         </div>
-    
+        <div id="main-2" style="display: flex; flex-direction: column; margin-left: 20px; align-items: flex-start;">
+        
+            <!-- Pie Charts -->
+            <label for="region-pie">Migration Flow Across Regions (Outbound; Select Origin Country)</label>
+            <div id="pies" style="display: flex; flex-direction: row; align-items: center;">
+                <div id="region-pie" style="height: 300px; width: 300px; border: 1px solid #777; overflow-y: auto;"></div>
+                <div id="pie" style="height: 300px; width: 300px; border: 1px solid #777; overflow-y: auto;"></div>
+            </div>
+        
+        </div>
     </div>
     
 </body>
