@@ -462,7 +462,7 @@ function drawSankeyDiagram() {
 
         var margin = {top: 10, right: 10, bottom: 10, left: 10},
         width = 390 - margin.left - margin.right,
-        height = 2000 - margin.top - margin.bottom;
+        height = 1500 - margin.top - margin.bottom;
 
         var svg = d3.select("#sankey").append("svg")
         .attr("width", width + margin.left + margin.right)
