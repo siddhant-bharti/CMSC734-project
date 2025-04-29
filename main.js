@@ -82,6 +82,7 @@ var regionCoordinates = {
     'West and Central Africa': [14.6617324, -17.4372164],
     'Americas': [39.7837304, -100.445882]
 }
+// Used for Bubble chart
 var regionCoordinates2D = {
     'Europe': [51.0, 20.0], 
     'Southern Africa': [-28.8166236, 24.991639], 
@@ -168,6 +169,7 @@ function drawVisualizations() {
     drawBarChart();
     drawSankeyDiagram();
     drawRegionPieChart();
+    enableDisableDropDowns();
 }
 
 function drawSlider() {
@@ -272,6 +274,16 @@ function setDestinationDropDown(value) {
     d3.select("#destination-drop-down")
     .property("value", value)
     .dispatch("change");
+}
+
+function enableDisableDropDowns() {
+    if (showRegionPie) {
+        d3.select("#origin-drop-down").attr("disabled", true);
+        d3.select("#destination-drop-down").attr("disabled", true);
+    } else {
+        d3.select("#origin-drop-down").attr("disabled", null);
+        d3.select("#destination-drop-down").attr("disabled", null);
+    }
 }
 
 function applyFilter() {
