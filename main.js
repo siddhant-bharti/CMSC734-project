@@ -903,6 +903,8 @@ function selectCountry(e) {
         setOriginDropDown(originCountry);
         setDestinationDropDown(destinationCountry);
     } else {
+        resetHighlightFixed(originCountryLayer);
+        resetHighlightFixed(destinationCountryLayer);
         originCountry = "NONE";
         destinationCountry = "NONE";
         originCountryLayer = "NONE";
@@ -931,11 +933,13 @@ function selectRegion(e){
     const parentLayer = e.target;
     const parentISO = parentLayer.feature.id;
     const parentRegion = asylumToRegion.get(isoToCountry[parentISO]);
+    console.log(parentLayer);
     
     if (originRegion === "NONE" && destinationRegion === "NONE") {
         originRegion = parentRegion;
         originRegionLayer = parentLayer;
-    } else if (destinationCountry === "NONE") {
+        console.log(originRegion, originRegionLayer);
+    } else if (destinationRegion === "NONE") {
         destinationRegion = parentRegion;
         destinationRegionLayer = parentLayer;
     } else {
