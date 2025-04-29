@@ -933,16 +933,16 @@ function selectRegion(e){
     const parentLayer = e.target;
     const parentISO = parentLayer.feature.id;
     const parentRegion = asylumToRegion.get(isoToCountry[parentISO]);
-    console.log(parentLayer);
     
     if (originRegion === "NONE" && destinationRegion === "NONE") {
         originRegion = parentRegion;
         originRegionLayer = parentLayer;
-        console.log(originRegion, originRegionLayer);
     } else if (destinationRegion === "NONE") {
         destinationRegion = parentRegion;
         destinationRegionLayer = parentLayer;
     } else {
+        resetHighlightFixedRegion(originRegionLayer);
+        resetHighlightFixedRegion(destinationRegionLayer);
         originRegion = "NONE";
         destinationRegion = "NONE";
         originRegionLayer = "NONE";
@@ -951,14 +951,14 @@ function selectRegion(e){
 
     const countryList = regionToCountries.get(parentRegion);
     if(originRegion !== "NONE" && originRegionLayer !== "NONE"){
-        highlightFeatureFixedRegion(parentLayer);
+        highlightFeatureFixedRegion(originRegionLayer);
     }else{
-        resetHighlightFixedRegion(parentLayer);
+        resetHighlightFixedRegion(originRegionLayer);
     }
     if(destinationRegion !== "NONE" && destinationRegionLayer !== "NONE"){
-        highlightFeatureFixedRegion(parentLayer);
+        highlightFeatureFixedRegion(destinationRegionLayer);
     }else{
-        resetHighlightFixedRegion(parentLayer);
+        resetHighlightFixedRegion(destinationRegionLayer);
     }
     applyFilter();
     drawVisualizations();
