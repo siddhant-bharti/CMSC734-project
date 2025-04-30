@@ -1143,12 +1143,12 @@ function drawRegionPieChart() {
     d3.select("#region-pie").selectAll("svg").remove();
     d3.select("#pie").selectAll("svg").remove();
 
-    if (!showRegionPie || originCountry === "NONE") {
+    if (!showRegionPie || originRegion === "NONE") {
         return;
     }
     var regionMigrantCount = new Map();
 
-    var originCountryRegion = asylumToRegion.get(originCountry);
+    var originCountryRegion = originRegion;
     var migrantCountInsideRegion = 0;
     var migrantCountOutsidesideRegion = 0;
 
@@ -1223,9 +1223,22 @@ function drawRegionPieChart() {
                 var [x, y] = labelArc.centroid(d);
                 return `translate(${x}, ${y})`;
             })
-            .text(function(d) {return `${d.data.region}: ${d.data.migrantCount}`;})
+            // .text(function(d) {return `${d.data.region}:<br>${d.data.migrantCount}`;})
             .style('font-size', '12px')
-            .style('fill', 'black');
+            .style('fill', 'black')
+            .each(function(d) {
+                d3.select(this)
+                    .append('tspan')
+                    .attr('x', 0)
+                    .attr('dy', 0)
+                    .text(d.data.region);
+
+                d3.select(this)
+                    .append('tspan')
+                    .attr('x', 0)
+                    .attr('dy', 10)
+                    .text(d.data.migrantCount);
+            });
     }
     pieChart(data, "#region-pie");
     // pieChart(data1, "#pie");
