@@ -298,18 +298,36 @@ function applyFilter() {
     //TODO: Filter should be optional on the provision of origin/destination
 
     // For map, bar
-    filtered_data[0] = filtered_data[0].filter(d => {
-        const yearDate = parseYear(d.year);
-        if (originCountry === "NONE" && destinationCountry === "NONE") {
-            return false;
-        } else if (destinationCountry === "NONE"){
-            return (d.origin === originCountry && yearDate >= startDate && yearDate <= endDate);
-        } else if (originCountry === "NONE"){
-            return (d.destination === destinationCountry && yearDate >= startDate && yearDate <= endDate);
-        } else {
-            return (d.origin === originCountry && d.destination === destinationCountry && yearDate >= startDate && yearDate <= endDate);
-        }
-    });
+    if (showRegionPie) {
+        filtered_data[0] = filtered_data[0].filter(d => {
+            const regionOriginD = asylumToRegion.get(d.origin);
+            const regionDestinationD = asylumToRegion.get(d.destination);
+            const yearDate = parseYear(d.year);
+
+            if (originRegion === "NONE" && destinationRegion === "NONE") {
+                return false;
+            } else if (destinationRegion === "NONE"){
+                return (regionOriginD === originRegion && yearDate >= startDate && yearDate <= endDate);
+            } else if (originRegion === "NONE"){
+                return (regionDestinationD === destinationRegion && yearDate >= startDate && yearDate <= endDate);
+            } else {
+                return (regionOriginD === originRegion && regionDestinationD === destinationRegion && yearDate >= startDate && yearDate <= endDate);
+            }
+        });
+    } else {
+        filtered_data[0] = filtered_data[0].filter(d => {
+            const yearDate = parseYear(d.year);
+            if (originCountry === "NONE" && destinationCountry === "NONE") {
+                return false;
+            } else if (destinationCountry === "NONE"){
+                return (d.origin === originCountry && yearDate >= startDate && yearDate <= endDate);
+            } else if (originCountry === "NONE"){
+                return (d.destination === destinationCountry && yearDate >= startDate && yearDate <= endDate);
+            } else {
+                return (d.origin === originCountry && d.destination === destinationCountry && yearDate >= startDate && yearDate <= endDate);
+            }
+        });
+    }
     //For sankey
     sankey_filtered_data[0] = sankey_filtered_data[0].filter(d => {
         const yearDate = parseYear(d.year);
@@ -327,6 +345,37 @@ function applyFilter() {
 
 function drawFlowMap() {
     var filteredLinks = filtered_data[0];
+
+    if (showRegionPie) {
+        var aggregate = {}
+        filteredLinks.forEach(d=>{
+            const regionOriginD = asylumToRegion.get(d.origin);
+            const regionDestinationD = asylumToRegion.get(d.destination);
+            const migrantCount = d.migrantCount;
+
+            if (regionOriginD in aggregate) {
+                if (regionDestinationD in aggregate[regionOriginD]) {
+                    aggregate[regionOriginD][regionDestinationD] = aggregate[regionOriginD][regionDestinationD] + migrantCount;    
+                } else{
+                    aggregate[regionOriginD][regionDestinationD] = migrantCount;    
+                }
+            } else {
+                aggregate[regionOriginD] = {};
+                aggregate[regionOriginD][regionDestinationD] = migrantCount;
+            }
+        });
+
+        filteredLinks = filteredLinks.map(d => {
+            const originRegion = asylumToRegion.get(d.origin);
+            const destinationRegion = asylumToRegion.get(d.destination);
+            return {
+                ...d,
+                originCoord: regionCoordinates[originRegion],
+                destinationCoord: regionCoordinates[destinationRegion],
+                migrantCount: aggregate[originRegion][destinationRegion]
+            };
+        });
+    }
 
     const maxMigrantCount = d3.max(filteredLinks, d => d.migrantCount);
     const minMigrantCount = d3.min(filteredLinks, d => d.migrantCount);
