@@ -138,6 +138,7 @@ function loadGeoJSON(){
     if(geojson){
         myMap.removeLayer(geojson);
     }
+    countryToLayer = new Map();
     fetch('countries.geo.json')
     .then(response => response.json())
     .then(data => {
@@ -813,9 +814,9 @@ function resetHighlight(e) {
 function resetHighlightRegion(e){
     var parentLayer = e.target;
     try {
-        if (parentLayer !== originRegionLayer && parentLayer !== destinationRegionLayer) {
-            const parentISO = parentLayer.feature.id;
-            const parentRegion = asylumToRegion.get(isoToCountry[parentISO]);
+        const parentISO = parentLayer.feature.id;
+        const parentRegion = asylumToRegion.get(isoToCountry[parentISO]);
+        if(originRegion !== parentRegion && destinationRegion !== parentRegion){
             if(regionToCountries.has(parentRegion)){
                 const countryList = regionToCountries.get(parentRegion);
                 countryList.forEach(countryName => {
@@ -869,16 +870,20 @@ function resetHighlightFixed(layer) {
 }
 
 function resetHighlightFixedRegion(parentLayer){
-    const parentISO = parentLayer.feature.id;
-    const parentRegion = asylumToRegion.get(isoToCountry[parentISO]);
-    const countryList = regionToCountries.get(parentRegion);
-    countryList.forEach(countryName => {
-        const countryISO = countryToIso[countryName];
-        if(countryToLayer.has(countryISO)){
-            const countryLayer = countryToLayer.get(countryISO);
-            resetHighlightFixed(countryLayer);
-        }
-    });
+    try {
+        const parentISO = parentLayer.feature.id;
+        const parentRegion = asylumToRegion.get(isoToCountry[parentISO]);
+        const countryList = regionToCountries.get(parentRegion);
+        countryList.forEach(countryName => {
+            const countryISO = countryToIso[countryName];
+            if(countryToLayer.has(countryISO)){
+                const countryLayer = countryToLayer.get(countryISO);
+                resetHighlightFixed(countryLayer);
+            }
+        });
+    } catch (error) {
+        console.log(error);
+    }
 }
 
 function selectCountry(e) {
@@ -933,13 +938,14 @@ function selectRegion(e){
     const parentLayer = e.target;
     const parentISO = parentLayer.feature.id;
     const parentRegion = asylumToRegion.get(isoToCountry[parentISO]);
-    
     if (originRegion === "NONE" && destinationRegion === "NONE") {
         originRegion = parentRegion;
         originRegionLayer = parentLayer;
+        highlightFeatureFixedRegion(originRegionLayer);
     } else if (destinationRegion === "NONE") {
         destinationRegion = parentRegion;
         destinationRegionLayer = parentLayer;
+        highlightFeatureFixedRegion(destinationRegionLayer);
     } else {
         resetHighlightFixedRegion(originRegionLayer);
         resetHighlightFixedRegion(destinationRegionLayer);
@@ -947,18 +953,6 @@ function selectRegion(e){
         destinationRegion = "NONE";
         originRegionLayer = "NONE";
         destinationRegionLayer = "NONE";
-    }
-
-    const countryList = regionToCountries.get(parentRegion);
-    if(originRegion !== "NONE" && originRegionLayer !== "NONE"){
-        highlightFeatureFixedRegion(originRegionLayer);
-    }else{
-        resetHighlightFixedRegion(originRegionLayer);
-    }
-    if(destinationRegion !== "NONE" && destinationRegionLayer !== "NONE"){
-        highlightFeatureFixedRegion(destinationRegionLayer);
-    }else{
-        resetHighlightFixedRegion(destinationRegionLayer);
     }
     applyFilter();
     drawVisualizations();
