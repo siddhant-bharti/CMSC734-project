@@ -375,6 +375,29 @@ function drawFlowMap() {
                 migrantCount: aggregate[originRegion][destinationRegion]
             };
         });
+    } else {
+        var aggregate = {}
+        filteredLinks.forEach(d=>{
+            const migrantCount = d.migrantCount;
+
+            if (d.origin in aggregate) {
+                if (d.destination in aggregate[d.origin]) {
+                    aggregate[d.origin][d.destination] = aggregate[d.origin][d.destination] + migrantCount;
+                } else{
+                    aggregate[d.origin][d.destination] = migrantCount;
+                }
+            } else {
+                aggregate[d.origin] = {};
+                aggregate[d.origin][d.destination] = migrantCount;
+            }
+        });
+
+        filteredLinks = filteredLinks.map(d => {
+            return {
+                ...d,
+                migrantCount: aggregate[d.origin][d.destination]
+            };
+        });
     }
 
     const maxMigrantCount = d3.max(filteredLinks, d => d.migrantCount);
