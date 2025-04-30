@@ -329,18 +329,36 @@ function applyFilter() {
         });
     }
     //For sankey
-    sankey_filtered_data[0] = sankey_filtered_data[0].filter(d => {
-        const yearDate = parseYear(d.year);
-        if (originCountry === "NONE" && destinationCountry === "NONE") {
-            return true;
-        } else if (destinationCountry === "NONE"){
-            return (d.origin === originCountry && yearDate >= startDate && yearDate <= endDate);
-        } else if (originCountry === "NONE"){
-            return (d.destination === destinationCountry && yearDate >= startDate && yearDate <= endDate);
-        } else {
-            return (d.origin === originCountry && d.destination === destinationCountry && yearDate >= startDate && yearDate <= endDate);
-        }
-    });
+    if (showRegionPie) {
+        sankey_filtered_data[0] = sankey_filtered_data[0].filter(d => {
+            const regionOriginD = asylumToRegion.get(d.origin);
+            const regionDestinationD = asylumToRegion.get(d.destination);
+            const yearDate = parseYear(d.year);
+
+            if (originRegion === "NONE" && destinationRegion === "NONE") {
+                return true;
+            } else if (destinationRegion === "NONE"){
+                return (regionOriginD === originRegion && yearDate >= startDate && yearDate <= endDate);
+            } else if (originRegion === "NONE"){
+                return (regionDestinationD === destinationRegion && yearDate >= startDate && yearDate <= endDate);
+            } else {
+                return (regionOriginD === originRegion && regionDestinationD === destinationRegion && yearDate >= startDate && yearDate <= endDate);
+            }
+        });
+    } else {
+        sankey_filtered_data[0] = sankey_filtered_data[0].filter(d => {
+            const yearDate = parseYear(d.year);
+            if (originCountry === "NONE" && destinationCountry === "NONE") {
+                return true;
+            } else if (destinationCountry === "NONE"){
+                return (d.origin === originCountry && yearDate >= startDate && yearDate <= endDate);
+            } else if (originCountry === "NONE"){
+                return (d.destination === destinationCountry && yearDate >= startDate && yearDate <= endDate);
+            } else {
+                return (d.origin === originCountry && d.destination === destinationCountry && yearDate >= startDate && yearDate <= endDate);
+            }
+        });
+    }
 }
 
 function drawFlowMap() {
