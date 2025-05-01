@@ -655,25 +655,56 @@ function drawBarChart() {
 
     if (showRegionBar === true)
     {
-        // console.log("Region Out");
-        if (originCountry !== "NONE") {
+        if (originRegion === "NONE" && destinationRegion === "NONE")
+        {
+            global_data[0].forEach(d => {
+                if (!totalsByDestination[d.destinationRegion]) {
+                    totalsByDestination[d.destinationRegion] = { migrantCount: 0, AsylumISO: d.destinationRegion };
+                }
+                totalsByDestination[d.destinationRegion].migrantCount += d.migrantCount;
+            });
+            global_data[0].forEach(d => {
+                if (!totalsByDestination[asylumToRegion.get(d.origin)]) {
+                    totalsByDestination[asylumToRegion.get(d.origin)] = { migrantCount: 0, AsylumISO: d.AsylumISO };
+                }
+                totalsByDestination[asylumToRegion.get(d.origin)].migrantCount += d.migrantCount;
+            });
+        }
+        else if (originRegion !== "NONE") {
             links.forEach(d => {
+                if (!totalsByDestination[d.destinationRegion]) {
+                    totalsByDestination[d.destinationRegion] = { migrantCount: 0, AsylumISO: d.destinationRegion };
+                }
+                totalsByDestination[d.destinationRegion].migrantCount += d.migrantCount;
+            });
+        } else {
+            global_data[0].forEach(d => {
+                if (!totalsByDestination[asylumToRegion.get(d.origin)]) {
+                    totalsByDestination[asylumToRegion.get(d.origin)] = { migrantCount: 0, AsylumISO: d.AsylumISO };
+                }
+                totalsByDestination[asylumToRegion.get(d.origin)].migrantCount += d.migrantCount;
+            });
+        }
+
+    } else {
+        if (originCountry === "NONE" && destinationCountry === "NONE")
+        {
+            console.log(global_data[0]);
+            console.log("Both are NONE");
+            global_data[0].forEach(d => {
                 if (!totalsByDestination[d.destination]) {
                     totalsByDestination[d.destination] = { migrantCount: 0, AsylumISO: d.AsylumISO };
                 }
                 totalsByDestination[d.destination].migrantCount += d.migrantCount;
             });
-        } else {
-            links.forEach(d => {
+            global_data[0].forEach(d => {
                 if (!totalsByDestination[d.origin]) {
                     totalsByDestination[d.origin] = { migrantCount: 0, AsylumISO: d.OriginISO };
                 }
                 totalsByDestination[d.origin].migrantCount += d.migrantCount;
             });
-        }
-
-    } else {
-        if (originCountry !== "NONE") {
+            console.log(totalsByDestination)
+        } else if (originCountry !== "NONE") {
             links.forEach(d => {
                 if (!totalsByDestination[d.destination]) {
                     totalsByDestination[d.destination] = { migrantCount: 0, AsylumISO: d.AsylumISO };
@@ -747,7 +778,7 @@ function drawBarChart() {
     bars.transition()
         .duration(500)
         .attr("y", (d, i) => margin.top + i * barHeight)
-        .attr("width", d => xlabel(d.migrantCount) - x(0));
+        .attr("width", d => xlabel(d.migrantCount) - xlabel(0));
     
     // EXIT
     bars.exit()
