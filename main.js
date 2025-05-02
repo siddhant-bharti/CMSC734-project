@@ -337,7 +337,7 @@ function applyFilter() {
             const yearDate = parseYear(d.year);
 
             if (originRegion === "NONE" && destinationRegion === "NONE") {
-                return true;
+                return (yearDate >= startDate && yearDate <= endDate);
             } else if (destinationRegion === "NONE"){
                 return (regionOriginD === originRegion && yearDate >= startDate && yearDate <= endDate);
             } else if (originRegion === "NONE"){
@@ -350,7 +350,7 @@ function applyFilter() {
         sankey_filtered_data[0] = sankey_filtered_data[0].filter(d => {
             const yearDate = parseYear(d.year);
             if (originCountry === "NONE" && destinationCountry === "NONE") {
-                return true;
+                return (yearDate >= startDate && yearDate <= endDate);
             } else if (destinationCountry === "NONE"){
                 return (d.origin === originCountry && yearDate >= startDate && yearDate <= endDate);
             } else if (originCountry === "NONE"){
