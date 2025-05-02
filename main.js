@@ -686,20 +686,6 @@ function drawHostBarChart() {
                 }
                 totalsByDestination[d.destinationRegion].migrantCount += d.migrantCount;
             });
-            // global_data[0].forEach(d => {
-            //     if (!totalsByDestination[asylumToRegion.get(d.origin)]) {
-            //         totalsByDestination[asylumToRegion.get(d.origin)] = { migrantCount: 0, AsylumISO: d.AsylumISO };
-            //     }
-            //     totalsByDestination[asylumToRegion.get(d.origin)].migrantCount += d.migrantCount;
-            // });
-        }
-        else if (originRegion !== "NONE") {
-            links.forEach(d => {
-                if (!totalsByDestination[d.destinationRegion]) {
-                    totalsByDestination[d.destinationRegion] = { migrantCount: 0, AsylumISO: d.destinationRegion };
-                }
-                totalsByDestination[d.destinationRegion].migrantCount += d.migrantCount;
-            });
         } else {
             links.forEach(d => {
                 if (!totalsByDestination[asylumToRegion.get(d.origin)]) {
@@ -712,23 +698,7 @@ function drawHostBarChart() {
     } else {
         if (originCountry === "NONE" && destinationCountry === "NONE")
         {
-            console.log(global_data[0]);
-            console.log("Both are NONE");
             global_data[0].forEach(d => {
-                if (!totalsByDestination[d.destination]) {
-                    totalsByDestination[d.destination] = { migrantCount: 0, AsylumISO: d.AsylumISO };
-                }
-                totalsByDestination[d.destination].migrantCount += d.migrantCount;
-            });
-            // global_data[0].forEach(d => {
-            //     if (!totalsByDestination[d.origin]) {
-            //         totalsByDestination[d.origin] = { migrantCount: 0, AsylumISO: d.OriginISO };
-            //     }
-            //     totalsByDestination[d.origin].migrantCount += d.migrantCount;
-            // });
-            console.log(totalsByDestination)
-        } else if (originCountry !== "NONE") {
-            links.forEach(d => {
                 if (!totalsByDestination[d.destination]) {
                     totalsByDestination[d.destination] = { migrantCount: 0, AsylumISO: d.AsylumISO };
                 }
@@ -912,21 +882,7 @@ function drawOriginBarChart() {
     {
         if (originRegion === "NONE" && destinationRegion === "NONE")
         {
-            // global_data[0].forEach(d => {
-            //     if (!totalsByDestination[d.destinationRegion]) {
-            //         totalsByDestination[d.destinationRegion] = { migrantCount: 0, AsylumISO: d.destinationRegion };
-            //     }
-            //     totalsByDestination[d.destinationRegion].migrantCount += d.migrantCount;
-            // });
             global_data[0].forEach(d => {
-                if (!totalsByDestination[asylumToRegion.get(d.origin)]) {
-                    totalsByDestination[asylumToRegion.get(d.origin)] = { migrantCount: 0, AsylumISO: d.AsylumISO };
-                }
-                totalsByDestination[asylumToRegion.get(d.origin)].migrantCount += d.migrantCount;
-            });
-        }
-        else if (originRegion !== "NONE") {
-            links.forEach(d => {
                 if (!totalsByDestination[asylumToRegion.get(d.origin)]) {
                     totalsByDestination[asylumToRegion.get(d.origin)] = { migrantCount: 0, AsylumISO: d.AsylumISO };
                 }
@@ -944,20 +900,7 @@ function drawOriginBarChart() {
     } else {
         if (originCountry === "NONE" && destinationCountry === "NONE")
         {
-            // global_data[0].forEach(d => {
-            //     if (!totalsByDestination[d.destination]) {
-            //         totalsByDestination[d.destination] = { migrantCount: 0, AsylumISO: d.AsylumISO };
-            //     }
-            //     totalsByDestination[d.destination].migrantCount += d.migrantCount;
-            // });
             global_data[0].forEach(d => {
-                if (!totalsByDestination[d.origin]) {
-                    totalsByDestination[d.origin] = { migrantCount: 0, AsylumISO: d.OriginISO };
-                }
-                totalsByDestination[d.origin].migrantCount += d.migrantCount;
-            });
-        } else if (originCountry !== "NONE") {
-            links.forEach(d => {
                 if (!totalsByDestination[d.origin]) {
                     totalsByDestination[d.origin] = { migrantCount: 0, AsylumISO: d.OriginISO };
                 }
