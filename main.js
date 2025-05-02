@@ -666,6 +666,13 @@ function drawBarChart() {
         .attr("width", 400)
         .attr("height", 800);  // intentionally larger → triggers scroll inside container
     
+    
+    const prefix1 = showRegionBar ? "Host Regions" : "Host Countries";
+    const prefix2 = showRegionBar ? "Origin Regions" : "Origin Countries";
+    const legend = typeFeature ?  ` (<span style="color: blue;">Blue: Refugees</span>, <span style="color: orange;">Orange: Asylum seekers</span>)` : "";
+    
+    d3.select("#bar label:nth-of-type(1)").html(prefix1 + legend);
+    d3.select("#bar label:nth-of-type(2)").html(prefix2 + legend);
     drawHostBarChart();
     drawOriginBarChart();
 }
