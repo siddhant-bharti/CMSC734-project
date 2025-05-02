@@ -645,6 +645,29 @@ function stringToColor(str) {
 }
 
 function drawBarChart() {
+
+    const svgContainers = d3.selectAll("#bar .svg-container");
+
+    // First svg in first container
+    const svg1 = svgContainers.filter((d, i) => i === 0)
+        .append("svg")
+        .attr("width", 400)
+        .attr("height", 800);  // intentionally larger → triggers scroll inside container
+    
+    // Second svg in second container
+    const svg2 = svgContainers.filter((d, i) => i === 1)
+        .append("svg")
+        .attr("width", 400)
+        .attr("height", 800);  // intentionally larger → triggers scroll inside container
+    
+    drawHostBarChart();
+    drawOriginBarChart();
+}
+
+
+function drawHostBarChart() {
+
+
     var links = filtered_data[0];
     const width = 400;
     const height = 600;
@@ -663,12 +686,12 @@ function drawBarChart() {
                 }
                 totalsByDestination[d.destinationRegion].migrantCount += d.migrantCount;
             });
-            global_data[0].forEach(d => {
-                if (!totalsByDestination[asylumToRegion.get(d.origin)]) {
-                    totalsByDestination[asylumToRegion.get(d.origin)] = { migrantCount: 0, AsylumISO: d.AsylumISO };
-                }
-                totalsByDestination[asylumToRegion.get(d.origin)].migrantCount += d.migrantCount;
-            });
+            // global_data[0].forEach(d => {
+            //     if (!totalsByDestination[asylumToRegion.get(d.origin)]) {
+            //         totalsByDestination[asylumToRegion.get(d.origin)] = { migrantCount: 0, AsylumISO: d.AsylumISO };
+            //     }
+            //     totalsByDestination[asylumToRegion.get(d.origin)].migrantCount += d.migrantCount;
+            // });
         }
         else if (originRegion !== "NONE") {
             links.forEach(d => {
@@ -678,7 +701,7 @@ function drawBarChart() {
                 totalsByDestination[d.destinationRegion].migrantCount += d.migrantCount;
             });
         } else {
-            global_data[0].forEach(d => {
+            links.forEach(d => {
                 if (!totalsByDestination[asylumToRegion.get(d.origin)]) {
                     totalsByDestination[asylumToRegion.get(d.origin)] = { migrantCount: 0, AsylumISO: d.AsylumISO };
                 }
@@ -697,12 +720,12 @@ function drawBarChart() {
                 }
                 totalsByDestination[d.destination].migrantCount += d.migrantCount;
             });
-            global_data[0].forEach(d => {
-                if (!totalsByDestination[d.origin]) {
-                    totalsByDestination[d.origin] = { migrantCount: 0, AsylumISO: d.OriginISO };
-                }
-                totalsByDestination[d.origin].migrantCount += d.migrantCount;
-            });
+            // global_data[0].forEach(d => {
+            //     if (!totalsByDestination[d.origin]) {
+            //         totalsByDestination[d.origin] = { migrantCount: 0, AsylumISO: d.OriginISO };
+            //     }
+            //     totalsByDestination[d.origin].migrantCount += d.migrantCount;
+            // });
             console.log(totalsByDestination)
         } else if (originCountry !== "NONE") {
             links.forEach(d => {
@@ -713,15 +736,13 @@ function drawBarChart() {
             });
         } else {
             links.forEach(d => {
-                if (!totalsByDestination[d.origin]) {
-                    totalsByDestination[d.origin] = { migrantCount: 0, AsylumISO: d.OriginISO };
+                if (!totalsByDestination[d.destination]) {
+                    totalsByDestination[d.destination] = { migrantCount: 0, AsylumISO: d.AsylumISO };
                 }
-                totalsByDestination[d.origin].migrantCount += d.migrantCount;
+                totalsByDestination[d.destination].migrantCount += d.migrantCount;
             });
         }
     }
-    
-    
     
     // Now map into a clean array
     const data = Object.entries(totalsByDestination).map(([destination, info]) => ({
@@ -736,6 +757,236 @@ function drawBarChart() {
 
     // More Dynamic.
     let svg = d3.select("#bar").select("svg");
+    if (svg.empty()) {
+        svg = d3.select("#bar")
+            .append("svg")
+            .attr("width", width);
+    }
+    svg.attr("height", scrollableHeight);
+
+
+    const x = d3.scaleLinear()
+        .domain([0, d3.max(sorteddata, d => d.migrantCount)])
+        .nice()
+        .range([margin.right, width - margin.left]);
+
+    const xlabel = d3.scaleLinear()
+        .domain([0, d3.max(sorteddata, d => d.migrantCount)])
+        .nice()
+        .range([50, width - margin.left]);
+
+    const y = d3.scaleBand()
+        .domain(sorteddata.map(d => d.destination))
+        .range([margin.left, width - margin.right])
+        .padding(0.1);
+    
+    const bars = svg.selectAll("rect").data(sorteddata, d => d.destination);
+
+    // ENTER
+    const barsEnter = bars.enter()
+        .append("rect")
+        .attr("x", 50)
+        .attr("y", (d, i) => margin.top + i * barHeight)
+        .attr("height", barHeight - 1)
+        .attr("width", 0)
+        .attr("fill", d => stringToColor(d.AsylumISO))
+        .transition()
+        .duration(500)
+        .attr("width", d => xlabel(d.migrantCount) - xlabel(0));   // <<<<<< use xlabel here
+
+    
+    // UPDATE
+    bars.transition()
+        .duration(500)
+        .attr("y", (d, i) => margin.top + i * barHeight)
+        .attr("width", d => xlabel(d.migrantCount) - xlabel(0));
+    
+    // EXIT
+    bars.exit()
+        .transition()
+        .duration(300)
+        .attr("width", 0)
+        .remove();
+    
+    // Bind data for labels
+    const labels = svg.selectAll("text.bar-label")
+        .data(sorteddata, d => d.destination);
+
+    // ENTER
+    labels.enter()
+        .append("text")
+        .attr("class", "bar-label")
+        .attr("x", 45)
+        .attr("y", (d, i) => margin.top + i * barHeight + (barHeight / 2))
+        .attr("dy", "0.35em")
+        .attr("text-anchor", "end")
+        .attr("fill", "black")
+        .style("font-size", "10px")
+        .text(d => {
+            return d.destination;
+        })
+        .transition()
+        .duration(500)
+        .style("opacity", 1);
+
+    // UPDATE
+    labels.transition()
+        .duration(500)
+        .attr("y", (d, i) => margin.top + i * barHeight + (barHeight / 2))
+        .text(d => d.destination);
+
+    // EXIT
+    labels.exit()
+        .transition()
+        .duration(300)
+        .style("opacity", 0)
+        .remove();
+
+    // Select the existing axis or append it if missing
+    let xAxisGroup = svg.select("g.x-axis");
+
+    if (xAxisGroup.empty()) {
+        // First time: create the axis group
+        xAxisGroup = svg.append("g")
+            .attr("class", "x-axis")
+            .attr("transform", `translate(0, ${margin.top - 5})`);
+    }
+    
+    // Whether first time or updating: transition and update axis properly
+    xAxisGroup.transition()
+        .duration(500)
+        .call(d3.axisTop(xlabel).ticks(5));
+    
+    // Optional: update label style after axis is called
+    xAxisGroup.selectAll("text")
+        .style("font-size", "10px");
+    
+
+    svg.selectAll("text.bar-textlabel").remove();
+    // Show immigration number on each bar.
+    const numberlabels = svg.selectAll("text.bar-textlabel").data(sorteddata, d => d.destination);
+    // numberlabels.exit()
+    //             .remove();
+
+    // ENTER labels
+    numberlabels.enter()
+        .append("text")
+        .attr("class", "bar-textlabel")
+        .attr("x", d => 55)
+        .attr("y", (d, i) => margin.top + i * barHeight + (barHeight / 2))
+        .attr("dy", ".35em")
+        .attr("fill", "black")
+        .attr("font-size", "12px")
+        .text(d => d.migrantCount)
+        .style("opacity", 0)
+        .transition()
+        .duration(50)
+        .style("opacity", 1);
+    
+    // UPDATE labels
+    numberlabels.transition()
+        .duration(50)
+        .attr("x", d => 55)
+        .attr("y", (d, i) => margin.top + i * barHeight + (barHeight / 2))
+        .text(d => d.migrantCount);
+    
+    // EXIT labels
+    numberlabels.exit()
+        .transition()
+        .duration(10)
+        .style("opacity", 0)
+        .remove();
+}
+
+function drawOriginBarChart() {
+
+    var links = filtered_data[0];
+    const width = 400;
+    const height = 600;
+    const margin = { top: 30, right: 30, bottom: 30, left: 30 };
+    const barHeight = 25;
+    const totalsByDestination = {};
+
+
+    if (showRegionBar === true)
+    {
+        if (originRegion === "NONE" && destinationRegion === "NONE")
+        {
+            // global_data[0].forEach(d => {
+            //     if (!totalsByDestination[d.destinationRegion]) {
+            //         totalsByDestination[d.destinationRegion] = { migrantCount: 0, AsylumISO: d.destinationRegion };
+            //     }
+            //     totalsByDestination[d.destinationRegion].migrantCount += d.migrantCount;
+            // });
+            global_data[0].forEach(d => {
+                if (!totalsByDestination[asylumToRegion.get(d.origin)]) {
+                    totalsByDestination[asylumToRegion.get(d.origin)] = { migrantCount: 0, AsylumISO: d.AsylumISO };
+                }
+                totalsByDestination[asylumToRegion.get(d.origin)].migrantCount += d.migrantCount;
+            });
+        }
+        else if (originRegion !== "NONE") {
+            links.forEach(d => {
+                if (!totalsByDestination[asylumToRegion.get(d.origin)]) {
+                    totalsByDestination[asylumToRegion.get(d.origin)] = { migrantCount: 0, AsylumISO: d.AsylumISO };
+                }
+                totalsByDestination[asylumToRegion.get(d.origin)].migrantCount += d.migrantCount;
+            });
+        } else {
+            links.forEach(d => {
+                if (!totalsByDestination[asylumToRegion.get(d.origin)]) {
+                    totalsByDestination[asylumToRegion.get(d.origin)] = { migrantCount: 0, AsylumISO: d.AsylumISO };
+                }
+                totalsByDestination[asylumToRegion.get(d.origin)].migrantCount += d.migrantCount;
+            });
+        }
+
+    } else {
+        if (originCountry === "NONE" && destinationCountry === "NONE")
+        {
+            // global_data[0].forEach(d => {
+            //     if (!totalsByDestination[d.destination]) {
+            //         totalsByDestination[d.destination] = { migrantCount: 0, AsylumISO: d.AsylumISO };
+            //     }
+            //     totalsByDestination[d.destination].migrantCount += d.migrantCount;
+            // });
+            global_data[0].forEach(d => {
+                if (!totalsByDestination[d.origin]) {
+                    totalsByDestination[d.origin] = { migrantCount: 0, AsylumISO: d.OriginISO };
+                }
+                totalsByDestination[d.origin].migrantCount += d.migrantCount;
+            });
+        } else if (originCountry !== "NONE") {
+            links.forEach(d => {
+                if (!totalsByDestination[d.origin]) {
+                    totalsByDestination[d.origin] = { migrantCount: 0, AsylumISO: d.OriginISO };
+                }
+                totalsByDestination[d.origin].migrantCount += d.migrantCount;
+            });
+        } else {
+            links.forEach(d => {
+                if (!totalsByDestination[d.origin]) {
+                    totalsByDestination[d.origin] = { migrantCount: 0, AsylumISO: d.OriginISO };
+                }
+                totalsByDestination[d.origin].migrantCount += d.migrantCount;
+            });
+        }
+    }
+    
+    // Now map into a clean array
+    const data = Object.entries(totalsByDestination).map(([destination, info]) => ({
+        destination,
+        migrantCount: info.migrantCount,
+        AsylumISO: info.AsylumISO
+    }));
+
+    const sorteddata = data.sort((a, b) => b.migrantCount - a.migrantCount);
+    
+    const scrollableHeight = sorteddata.length * barHeight + margin.top + margin.bottom;
+
+    // More Dynamic.
+    const svg = d3.select("#origin-container").select("svg");
+
     if (svg.empty()) {
         svg = d3.select("#bar")
             .append("svg")

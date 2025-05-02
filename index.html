@@ -51,16 +51,24 @@
         </div>
         <div id="main-2" style="display: flex; flex-direction: row; margin-left: 5px; align-items: flex-start;">
             <!-- Bar Chart -->
-            <div style="display: flex; flex-direction: column; align-items: center;">
+            <div id="bar">
                 <label for="bar">Host Countries</label>
-                <div id="bar" style="height: 800px; width: 400px; border: 1px solid #777; overflow-y: auto;"></div>
+
+                <div id="host-container" class="svg-container" style="width: 400px; height: 400px; overflow-y: auto; border: 1px solid #777; margin-bottom: 10px;">
+                    <!-- first svg will go here dynamically -->
+                </div>
+                <label for="bar">Origin Countries</label>
+
+                <div id="origin-container" class="svg-container" style="width: 400px; height: 400px; overflow-y: auto; border: 1px solid #777;">
+                    <!-- second svg will go here dynamically -->
+                </div>
             </div>
         
     
             <!-- Sankey Diagram -->
             <div style="display: flex; flex-direction: column; align-items: center;">
                 <label for="sankey">Migrants Analysis Regions</label>
-                <div id="sankey" style="height: 800px; width: 400px; border: 1px solid #777; overflow: auto;"></div>
+                <div id="sankey" style="height: 842px; width: 400px; border: 1px solid #777; overflow: auto;"></div>
             </div>
         </div>
     </div>
