@@ -98,7 +98,7 @@ let geojson;
 Promise.all([
     d3.csv('./datasets/dataset_denormalized_enriched_pruned.csv', function(row) {
         var link = {origin: row['originName'], originCoord: [+row['originLatitude'], +row['originLongitude']], destination: row['asylumName'], destinationCoord: [+row['asylumLatitude'], +row['asylumLongitude']], 
-            destinationRegion: row['AsylumRegion'], migrantCount: +row[' Count'].replace(/,/g, '').trim(), year: +row['Year'], OriginISO: row['OriginISO'], AsylumISO: row['AsylumISO']};
+            destinationRegion: row['AsylumRegion'], migrantCount: +row[' Count'].replace(/,/g, '').trim(), year: +row['Year'], OriginISO: row['OriginISO'], AsylumISO: row['AsylumISO'], PT: row['PT']};
         return link; 
     })   
 ]).then(function(data) {
@@ -128,6 +128,7 @@ Promise.all([
     applyFilter();
     drawSlider();
     addPlayButton();
+    addSwitchButton();
     originDropDown();
     originCheckBox();
     destinationDropDown();
@@ -666,8 +667,7 @@ function drawBarChart() {
 
 
 function drawHostBarChart() {
-
-
+    console.log(filtered_data);
     var links = filtered_data[0];
     const width = 400;
     const height = 600;
@@ -682,16 +682,26 @@ function drawHostBarChart() {
         {
             global_data[0].forEach(d => {
                 if (!totalsByDestination[d.destinationRegion]) {
-                    totalsByDestination[d.destinationRegion] = { migrantCount: 0, AsylumISO: d.destinationRegion };
+                    totalsByDestination[d.destinationRegion] = { migrantCount: 0, AsylumISO: d.destinationRegion, REFCount: 0, ASYCount: 0};
                 }
                 totalsByDestination[d.destinationRegion].migrantCount += d.migrantCount;
+                if (d.PT === "ASY") {
+                    totalsByDestination[d.destinationRegion].ASYCount += d.migrantCount;
+                } else {
+                    totalsByDestination[d.destinationRegion].REFCount += d.migrantCount;
+                }
             });
         } else {
             links.forEach(d => {
-                if (!totalsByDestination[asylumToRegion.get(d.origin)]) {
-                    totalsByDestination[asylumToRegion.get(d.origin)] = { migrantCount: 0, AsylumISO: d.AsylumISO };
+                if (!totalsByDestination[d.destinationRegion]) {
+                    totalsByDestination[d.destinationRegion] = { migrantCount: 0, AsylumISO: d.destinationRegion, REFCount: 0, ASYCount: 0};
                 }
-                totalsByDestination[asylumToRegion.get(d.origin)].migrantCount += d.migrantCount;
+                totalsByDestination[d.destinationRegion].migrantCount += d.migrantCount;
+                if (d.PT === "ASY") {
+                    totalsByDestination[d.destinationRegion].ASYCount += d.migrantCount;
+                } else {
+                    totalsByDestination[d.destinationRegion].REFCount += d.migrantCount;
+                }
             });
         }
 
@@ -700,17 +710,30 @@ function drawHostBarChart() {
         {
             global_data[0].forEach(d => {
                 if (!totalsByDestination[d.destination]) {
-                    totalsByDestination[d.destination] = { migrantCount: 0, AsylumISO: d.AsylumISO };
+                    // console.log(d.PT);
+                    totalsByDestination[d.destination] = { migrantCount: 0, AsylumISO: d.AsylumISO , REFCount: 0, ASYCount: 0};
                 }
                 totalsByDestination[d.destination].migrantCount += d.migrantCount;
+                if (d.PT === "ASY") {
+                    totalsByDestination[d.destination].ASYCount += d.migrantCount;
+                } else {
+                    totalsByDestination[d.destination].REFCount += d.migrantCount;
+                }
             });
         } else {
             links.forEach(d => {
                 if (!totalsByDestination[d.destination]) {
-                    totalsByDestination[d.destination] = { migrantCount: 0, AsylumISO: d.AsylumISO };
+                    // console.log(d.PT);
+                    totalsByDestination[d.destination] = { migrantCount: 0, AsylumISO: d.AsylumISO , REFCount: 0, ASYCount: 0};
                 }
                 totalsByDestination[d.destination].migrantCount += d.migrantCount;
+                if (d.PT === "ASY") {
+                    totalsByDestination[d.destination].ASYCount += d.migrantCount;
+                } else {
+                    totalsByDestination[d.destination].REFCount += d.migrantCount;
+                }
             });
+            console.log(totalsByDestination);
         }
     }
     
@@ -727,6 +750,12 @@ function drawHostBarChart() {
 
     // More Dynamic.
     let svg = d3.select("#bar").select("svg");
+    if (typeFeature === true){
+        svg.selectAll("rect").remove();
+    }
+    svg.selectAll(".bar-group").remove();
+    
+
     if (svg.empty()) {
         svg = d3.select("#bar")
             .append("svg")
@@ -750,34 +779,127 @@ function drawHostBarChart() {
         .range([margin.left, width - margin.right])
         .padding(0.1);
     
-    const bars = svg.selectAll("rect").data(sorteddata, d => d.destination);
+    if (typeFeature === false){
+        const bars = svg.selectAll("rect").data(sorteddata, d => d.destination);
+        // ENTER
+        const barsEnter = bars.enter()
+            .append("rect")
+            .attr("x", 50)
+            .attr("y", (d, i) => margin.top + i * barHeight)
+            .attr("height", barHeight - 1)
+            .attr("width", 0)
+            .attr("fill", d => stringToColor(d.AsylumISO))
+            .transition()
+            .duration(500)
+            .attr("width", d => xlabel(d.migrantCount) - xlabel(0));   // <<<<<< use xlabel here
 
-    // ENTER
-    const barsEnter = bars.enter()
-        .append("rect")
-        .attr("x", 50)
-        .attr("y", (d, i) => margin.top + i * barHeight)
-        .attr("height", barHeight - 1)
-        .attr("width", 0)
-        .attr("fill", d => stringToColor(d.AsylumISO))
-        .transition()
-        .duration(500)
-        .attr("width", d => xlabel(d.migrantCount) - xlabel(0));   // <<<<<< use xlabel here
+        // UPDATE
+        bars.transition()
+            .duration(500)
+            .attr("y", (d, i) => margin.top + i * barHeight)
+            .attr("width", d => xlabel(d.migrantCount) - xlabel(0));
+        
+        // EXIT
+        bars.exit()
+            .transition()
+            .duration(300)
+            .attr("width", 0)
+            .remove();
+    } else {
+        const stacked_data = Object.entries(totalsByDestination).map(([destination, info]) => ({
+            destination: destination,
+            migrantCount: info.migrantCount,
+            AsylumISO: info.AsylumISO,
+            REFCount: info.REFCount,
+            ASYCount: info.ASYCount
+        }));
+        stacked_data.sort((a, b) => b.migrantCount - a.migrantCount);
+        const groups = svg.selectAll(".bar-group")
+            .data(stacked_data, d => d.destination);
 
-    
-    // UPDATE
-    bars.transition()
-        .duration(500)
-        .attr("y", (d, i) => margin.top + i * barHeight)
-        .attr("width", d => xlabel(d.migrantCount) - xlabel(0));
-    
-    // EXIT
-    bars.exit()
+        const groupsEnter = groups.enter()
+            .append("g")
+            .attr("class", "bar-group")
+            .attr("transform", (d, i) => `translate(${50}, ${margin.top + i * barHeight})`);
+
+        groupsEnter.each(function(d) {
+            const g = d3.select(this);
+        
+            const total = d.REFCount + d.ASYCount;
+            const totalWidth = xlabel(total) - xlabel(0);
+            const refWidth = total === 0 ? 0 : totalWidth * (d.REFCount / total);
+            const asyWidth = total === 0 ? 0 : totalWidth * (d.ASYCount / total);
+        
+            let xOffset = 0;
+        
+            // REF segment
+            g.append("rect")
+                .attr("x", xOffset)
+                .attr("y", 0)
+                .attr("height", barHeight - 1)
+                .attr("width", 0)
+                .attr("fill", "#1f77b4")
+                .transition()
+                .duration(500)
+                .attr("width", refWidth);
+        
+            xOffset += refWidth;
+        
+            // ASY segment
+            g.append("rect")
+                .attr("x", xOffset)
+                .attr("y", 0)
+                .attr("height", barHeight - 1)
+                .attr("width", 0)
+                .attr("fill", "#ff7f0e")
+                .transition()
+                .duration(500)
+                .attr("width", asyWidth);
+        });
+            
+        // UPDATE
+        groups.transition()
+            .duration(500)
+            .attr("transform", (d, i) => `translate(${50}, ${margin.top + i * barHeight})`);
+
+        // EXIT
+        groups.exit().remove();
+
+    }
+
+    svg.selectAll("text.bar-textlabel").remove();
+    const numberlabels = svg.selectAll("text.bar-textlabel").data(sorteddata, d => d.destination);
+
+    // ENTER labels
+    numberlabels.enter()
+        .append("text")
+        .attr("class", "bar-textlabel")
+        .attr("x", d => 55)
+        .attr("y", (d, i) => margin.top + i * barHeight + (barHeight / 2))
+        .attr("dy", ".35em")
+        .attr("fill", "black")
+        .attr("font-size", "12px")
+        .text(d => d.migrantCount)
+        .style("opacity", 0)
         .transition()
-        .duration(300)
-        .attr("width", 0)
+        .duration(50)
+        .style("opacity", 1);
+    
+    // UPDATE labels
+    numberlabels.transition()
+        .duration(50)
+        .attr("x", d => 55)
+        .attr("y", (d, i) => margin.top + i * barHeight + (barHeight / 2))
+        .text(d => d.migrantCount);
+    
+    // EXIT labels
+    numberlabels.exit()
+        .transition()
+        .duration(10)
+        .style("opacity", 0)
         .remove();
-    
+
+    //// Start Text Label
     // Bind data for labels
     const labels = svg.selectAll("text.bar-label")
         .data(sorteddata, d => d.destination);
@@ -831,41 +953,6 @@ function drawHostBarChart() {
     xAxisGroup.selectAll("text")
         .style("font-size", "10px");
     
-
-    svg.selectAll("text.bar-textlabel").remove();
-    // Show immigration number on each bar.
-    const numberlabels = svg.selectAll("text.bar-textlabel").data(sorteddata, d => d.destination);
-    // numberlabels.exit()
-    //             .remove();
-
-    // ENTER labels
-    numberlabels.enter()
-        .append("text")
-        .attr("class", "bar-textlabel")
-        .attr("x", d => 55)
-        .attr("y", (d, i) => margin.top + i * barHeight + (barHeight / 2))
-        .attr("dy", ".35em")
-        .attr("fill", "black")
-        .attr("font-size", "12px")
-        .text(d => d.migrantCount)
-        .style("opacity", 0)
-        .transition()
-        .duration(50)
-        .style("opacity", 1);
-    
-    // UPDATE labels
-    numberlabels.transition()
-        .duration(50)
-        .attr("x", d => 55)
-        .attr("y", (d, i) => margin.top + i * barHeight + (barHeight / 2))
-        .text(d => d.migrantCount);
-    
-    // EXIT labels
-    numberlabels.exit()
-        .transition()
-        .duration(10)
-        .style("opacity", 0)
-        .remove();
 }
 
 function drawOriginBarChart() {
@@ -884,16 +971,26 @@ function drawOriginBarChart() {
         {
             global_data[0].forEach(d => {
                 if (!totalsByDestination[asylumToRegion.get(d.origin)]) {
-                    totalsByDestination[asylumToRegion.get(d.origin)] = { migrantCount: 0, AsylumISO: d.AsylumISO };
+                    totalsByDestination[asylumToRegion.get(d.origin)] = { migrantCount: 0, AsylumISO: d.AsylumISO, REFCount: 0, ASYCount: 0};
                 }
                 totalsByDestination[asylumToRegion.get(d.origin)].migrantCount += d.migrantCount;
+                if (d.PT === "ASY") {
+                    totalsByDestination[asylumToRegion.get(d.origin)].ASYCount += d.migrantCount;
+                } else {
+                    totalsByDestination[asylumToRegion.get(d.origin)].REFCount += d.migrantCount;
+                }
             });
         } else {
             links.forEach(d => {
                 if (!totalsByDestination[asylumToRegion.get(d.origin)]) {
-                    totalsByDestination[asylumToRegion.get(d.origin)] = { migrantCount: 0, AsylumISO: d.AsylumISO };
+                    totalsByDestination[asylumToRegion.get(d.origin)] = { migrantCount: 0, AsylumISO: d.AsylumISO, REFCount: 0, ASYCount: 0 };
                 }
                 totalsByDestination[asylumToRegion.get(d.origin)].migrantCount += d.migrantCount;
+                if (d.PT === "ASY") {
+                    totalsByDestination[asylumToRegion.get(d.origin)].ASYCount += d.migrantCount;
+                } else {
+                    totalsByDestination[asylumToRegion.get(d.origin)].REFCount += d.migrantCount;
+                }
             });
         }
 
@@ -902,16 +999,26 @@ function drawOriginBarChart() {
         {
             global_data[0].forEach(d => {
                 if (!totalsByDestination[d.origin]) {
-                    totalsByDestination[d.origin] = { migrantCount: 0, AsylumISO: d.OriginISO };
+                    totalsByDestination[d.origin] = { migrantCount: 0, AsylumISO: d.OriginISO, REFCount: 0, ASYCount: 0};
                 }
                 totalsByDestination[d.origin].migrantCount += d.migrantCount;
+                if (d.PT === "ASY") {
+                    totalsByDestination[d.origin].ASYCount += d.migrantCount;
+                } else {
+                    totalsByDestination[d.origin].REFCount += d.migrantCount;
+                }
             });
         } else {
             links.forEach(d => {
                 if (!totalsByDestination[d.origin]) {
-                    totalsByDestination[d.origin] = { migrantCount: 0, AsylumISO: d.OriginISO };
+                    totalsByDestination[d.origin] = { migrantCount: 0, AsylumISO: d.OriginISO, REFCount: 0, ASYCount: 0};
                 }
                 totalsByDestination[d.origin].migrantCount += d.migrantCount;
+                if (d.PT === "ASY") {
+                    totalsByDestination[d.origin].ASYCount += d.migrantCount;
+                } else {
+                    totalsByDestination[d.origin].REFCount += d.migrantCount;
+                }
             });
         }
     }
@@ -929,6 +1036,10 @@ function drawOriginBarChart() {
 
     // More Dynamic.
     const svg = d3.select("#origin-container").select("svg");
+    if (typeFeature === true){
+        svg.selectAll("rect").remove();
+    } 
+    svg.selectAll(".bar-group").remove();
 
     if (svg.empty()) {
         svg = d3.select("#bar")
@@ -953,33 +1064,95 @@ function drawOriginBarChart() {
         .range([margin.left, width - margin.right])
         .padding(0.1);
     
-    const bars = svg.selectAll("rect").data(sorteddata, d => d.destination);
+    // const bars = svg.selectAll("rect").data(sorteddata, d => d.destination);
 
-    // ENTER
-    const barsEnter = bars.enter()
-        .append("rect")
-        .attr("x", 50)
-        .attr("y", (d, i) => margin.top + i * barHeight)
-        .attr("height", barHeight - 1)
-        .attr("width", 0)
-        .attr("fill", d => stringToColor(d.AsylumISO))
-        .transition()
-        .duration(500)
-        .attr("width", d => xlabel(d.migrantCount) - xlabel(0));   // <<<<<< use xlabel here
+    if (typeFeature === false){
+        const bars = svg.selectAll("rect").data(sorteddata, d => d.destination);
+        // ENTER
+        const barsEnter = bars.enter()
+            .append("rect")
+            .attr("x", 50)
+            .attr("y", (d, i) => margin.top + i * barHeight)
+            .attr("height", barHeight - 1)
+            .attr("width", 0)
+            .attr("fill", d => stringToColor(d.AsylumISO))
+            .transition()
+            .duration(500)
+            .attr("width", d => xlabel(d.migrantCount) - xlabel(0));   // <<<<<< use xlabel here
 
-    
-    // UPDATE
-    bars.transition()
-        .duration(500)
-        .attr("y", (d, i) => margin.top + i * barHeight)
-        .attr("width", d => xlabel(d.migrantCount) - xlabel(0));
-    
-    // EXIT
-    bars.exit()
-        .transition()
-        .duration(300)
-        .attr("width", 0)
-        .remove();
+        // UPDATE
+        bars.transition()
+            .duration(500)
+            .attr("y", (d, i) => margin.top + i * barHeight)
+            .attr("width", d => xlabel(d.migrantCount) - xlabel(0));
+        
+        // EXIT
+        bars.exit()
+            .transition()
+            .duration(300)
+            .attr("width", 0)
+            .remove();
+    } else {
+        const stacked_data = Object.entries(totalsByDestination).map(([destination, info]) => ({
+            destination: destination,
+            migrantCount: info.migrantCount,
+            AsylumISO: info.AsylumISO,
+            REFCount: info.REFCount,
+            ASYCount: info.ASYCount
+        }));
+        stacked_data.sort((a, b) => b.migrantCount - a.migrantCount);
+        const groups = svg.selectAll(".bar-group")
+            .data(stacked_data, d => d.destination);
+
+        const groupsEnter = groups.enter()
+            .append("g")
+            .attr("class", "bar-group")
+            .attr("transform", (d, i) => `translate(${50}, ${margin.top + i * barHeight})`);
+
+        groupsEnter.each(function(d) {
+            const g = d3.select(this);
+        
+            const total = d.REFCount + d.ASYCount;
+            const totalWidth = xlabel(total) - xlabel(0);
+            const refWidth = total === 0 ? 0 : totalWidth * (d.REFCount / total);
+            const asyWidth = total === 0 ? 0 : totalWidth * (d.ASYCount / total);
+        
+            let xOffset = 0;
+        
+            // REF segment
+            g.append("rect")
+                .attr("x", xOffset)
+                .attr("y", 0)
+                .attr("height", barHeight - 1)
+                .attr("width", 0)
+                .attr("fill", "#1f77b4")
+                .transition()
+                .duration(500)
+                .attr("width", refWidth);
+        
+            xOffset += refWidth;
+        
+            // ASY segment
+            g.append("rect")
+                .attr("x", xOffset)
+                .attr("y", 0)
+                .attr("height", barHeight - 1)
+                .attr("width", 0)
+                .attr("fill", "#ff7f0e")
+                .transition()
+                .duration(500)
+                .attr("width", asyWidth);
+        });
+            
+        // UPDATE
+        groups.transition()
+            .duration(500)
+            .attr("transform", (d, i) => `translate(${50}, ${margin.top + i * barHeight})`);
+
+        // EXIT
+        groups.exit().remove();
+
+    }
     
     // Bind data for labels
     const labels = svg.selectAll("text.bar-label")
@@ -1357,6 +1530,17 @@ function addPlayButton() {
                 button.text("Play Year-by-Year");
                 isPlaying = false;
             }
+        });
+}
+
+let typeFeature = false;
+
+function addSwitchButton() {
+    d3.select("#switch-btn")
+        .on("click", function() {
+            typeFeature = !typeFeature;
+            d3.select(this).text(`Immigration Type: ${typeFeature ? "ON" : "OFF"}`);
+            drawBarChart();
         });
 }
 
