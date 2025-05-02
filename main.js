@@ -720,7 +720,9 @@ function drawHostBarChart() {
     const data = Object.entries(totalsByDestination).map(([destination, info]) => ({
         destination,
         migrantCount: info.migrantCount,
-        AsylumISO: info.AsylumISO
+        AsylumISO: info.AsylumISO,
+        REFCount: info.REFCount,
+        ASYCount: info.ASYCount
     }));
 
     const sorteddata = data.sort((a, b) => b.migrantCount - a.migrantCount);
@@ -858,7 +860,13 @@ function drawHostBarChart() {
         .attr("dy", ".35em")
         .attr("fill", "black")
         .attr("font-size", "12px")
-        .text(d => d.migrantCount)
+        .text(d => {
+            if (typeFeature) {
+                return `REF: ${d.REFCount}  ASY: ${d.ASYCount}`;
+            } else {
+                return d.migrantCount;
+            }
+        })
         .style("opacity", 0)
         .transition()
         .duration(50)
@@ -869,7 +877,13 @@ function drawHostBarChart() {
         .duration(50)
         .attr("x", d => 55)
         .attr("y", (d, i) => margin.top + i * barHeight + (barHeight / 2))
-        .text(d => d.migrantCount);
+        .text(d => {
+            if (typeFeature) {
+                return `REF: ${d.REFCount}  ASY: ${d.ASYCount}`;
+            } else {
+                return d.migrantCount;
+            }
+        })
     
     // EXIT labels
     numberlabels.exit()
@@ -975,7 +989,9 @@ function drawOriginBarChart() {
     const data = Object.entries(totalsByDestination).map(([destination, info]) => ({
         destination,
         migrantCount: info.migrantCount,
-        AsylumISO: info.AsylumISO
+        AsylumISO: info.AsylumISO,
+        REFCount: info.REFCount,
+        ASYCount: info.ASYCount
     }));
 
     const sorteddata = data.sort((a, b) => b.migrantCount - a.migrantCount);
@@ -1171,7 +1187,13 @@ function drawOriginBarChart() {
         .attr("dy", ".35em")
         .attr("fill", "black")
         .attr("font-size", "12px")
-        .text(d => d.migrantCount)
+        .text(d => {
+            if (typeFeature) {
+                return `REF: ${d.REFCount}  ASY: ${d.ASYCount}`;
+            } else {
+                return d.migrantCount;
+            }
+        })
         .style("opacity", 0)
         .transition()
         .duration(50)
@@ -1182,7 +1204,13 @@ function drawOriginBarChart() {
         .duration(50)
         .attr("x", d => 55)
         .attr("y", (d, i) => margin.top + i * barHeight + (barHeight / 2))
-        .text(d => d.migrantCount);
+        .text(d => {
+            if (typeFeature) {
+                return `REF: ${d.REFCount}  ASY: ${d.ASYCount}`;
+            } else {
+                return d.migrantCount;
+            }
+        })
     
     // EXIT labels
     numberlabels.exit()
