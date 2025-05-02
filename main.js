@@ -306,7 +306,7 @@ function applyFilter() {
             const yearDate = parseYear(d.year);
 
             if (originRegion === "NONE" && destinationRegion === "NONE") {
-                return false;
+                return (yearDate >= startDate && yearDate <= endDate);
             } else if (destinationRegion === "NONE"){
                 return (regionOriginD === originRegion && yearDate >= startDate && yearDate <= endDate);
             } else if (originRegion === "NONE"){
@@ -319,7 +319,7 @@ function applyFilter() {
         filtered_data[0] = filtered_data[0].filter(d => {
             const yearDate = parseYear(d.year);
             if (originCountry === "NONE" && destinationCountry === "NONE") {
-                return false;
+                return (yearDate >= startDate && yearDate <= endDate);
             } else if (destinationCountry === "NONE"){
                 return (d.origin === originCountry && yearDate >= startDate && yearDate <= endDate);
             } else if (originCountry === "NONE"){
@@ -424,6 +424,11 @@ function drawFlowMap() {
     const thicknessScale = d3.scaleLinear().domain([minMigrantCount, maxMigrantCount]).range([1, 10]);
 
     nodeLinkG.selectAll('.grid-link').remove();
+
+    // Else map is too crowded
+    if ((doDrawRegions() && originRegion === "NONE" && destinationRegion === "NONE") || (originCountry === "NONE" && destinationCountry === "NONE")) {
+        return;
+    }
 
     nodeLinkG.selectAll('.grid-link')
     .data(filteredLinks)
