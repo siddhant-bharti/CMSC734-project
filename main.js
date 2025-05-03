@@ -908,8 +908,10 @@ function drawHostBarChart() {
         .attr("fill", "black")
         .style("font-size", "10px")
         .text(d => {
-            return d.destination;
+            return d.AsylumISO;
         })
+        .append("title")
+        .text(d => `${d.AsylumISO}: ${d.destination}`)
         .transition()
         .duration(500)
         .style("opacity", 1);
@@ -918,7 +920,7 @@ function drawHostBarChart() {
     labels.transition()
         .duration(500)
         .attr("y", (d, i) => margin.top + i * barHeight + (barHeight / 2))
-        .text(d => d.destination);
+        // .text(d => d.destination);
 
     // EXIT
     labels.exit()
@@ -961,8 +963,9 @@ function drawOriginBarChart() {
     if (showRegionBar === true)
     {
         links.forEach(d => {
+            var regionOriginD = String(asylumToRegion.get(d.origin));
             if (!totalsByDestination[asylumToRegion.get(d.origin)]) {
-                totalsByDestination[asylumToRegion.get(d.origin)] = { migrantCount: 0, AsylumISO: d.AsylumISO, REFCount: 0, ASYCount: 0 };
+                totalsByDestination[asylumToRegion.get(d.origin)] = { migrantCount: 0, AsylumISO: regionOriginD, REFCount: 0, ASYCount: 0 };
             }
             totalsByDestination[asylumToRegion.get(d.origin)].migrantCount += d.migrantCount;
             if (d.PT === "ASY") {
@@ -1133,8 +1136,10 @@ function drawOriginBarChart() {
         .attr("fill", "black")
         .style("font-size", "10px")
         .text(d => {
-            return d.destination;
+            return d.AsylumISO;
         })
+        .append("title")
+        .text(d => `${d.AsylumISO}: ${d.destination}`)
         .transition()
         .duration(500)
         .style("opacity", 1);
@@ -1143,7 +1148,7 @@ function drawOriginBarChart() {
     labels.transition()
         .duration(500)
         .attr("y", (d, i) => margin.top + i * barHeight + (barHeight / 2))
-        .text(d => d.destination);
+        // .text(d => d.destination);
 
     // EXIT
     labels.exit()
