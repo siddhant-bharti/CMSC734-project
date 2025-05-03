@@ -427,8 +427,14 @@ function drawFlowMap() {
     nodeLinkG.selectAll('.grid-link').remove();
 
     // Else map is too crowded
-    if ((doDrawRegions() && originRegion === "NONE" && destinationRegion === "NONE") || (originCountry === "NONE" && destinationCountry === "NONE")) {
-        return;
+    if (doDrawRegions()) {
+        if (originRegion === "NONE" && destinationRegion === "NONE") {
+            return;
+        }
+    } else {
+        if (originCountry === "NONE" && destinationCountry === "NONE") {
+            return;
+        }
     }
 
     nodeLinkG.selectAll('.grid-link')
