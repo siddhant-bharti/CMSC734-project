@@ -185,7 +185,8 @@ function drawSlider() {
         .tickFormat(d3.timeFormat('%Y'))
         .ticks(8)
         .default([slider_min_year, slider_max_year])
-        .fill('blue');
+        .fill('blue')
+        .displayValue(true);
 
     sliderRange.on('onchange', val => {
         const startDate = new Date(val[0]);
